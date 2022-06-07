@@ -147,7 +147,7 @@ class AuthController extends Controller
             'username' => ['required', 'max:191', 'string'],
             'password' => ['required', 'max:191', 'string'],
         ]);
-         
+
 
         if (Admin::where(['username' => $request->username])->exists()) {
           $user=Admin::where(['username' => $request->username])->first();
@@ -185,12 +185,6 @@ class AuthController extends Controller
             return response()->json('error',404);
 
     }
-    public function ad()
-    {
-       return ('aa');
-    }
-public function aaa(){dd(3);}
-
 
 
 
