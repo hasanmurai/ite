@@ -19,7 +19,8 @@ class Company extends Authenticatable
      * @var array<int, string>
      */
     protected $table="companies";
-protected $guard="companies_api";
+
+
     protected $fillable = [
         'username',
         'email',
@@ -30,7 +31,6 @@ protected $guard="companies_api";
         'phone_number',
         'photo',
         'commercial_record',
-        'social_media_account'
     ];
 
     protected $primaryKey="id";
@@ -52,4 +52,14 @@ protected $guard="companies_api";
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function tables()
+    {
+        return $this->hasMany(Table::class,'company_id');
+    }
+    public function register_requests()
+    {
+        return $this->hasMany(RegisterRequest::class,'company_id');
+    }
+    public function invites(){
+        return $this->hasMany(Invite::class,'company_id');}
 }

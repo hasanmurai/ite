@@ -13,7 +13,6 @@ class CompanyRequest extends Model
     protected $table="company_requests";
     protected $fillable = [
         'admin_id',
-        'status_id',
         'username',
         'email',
         'password',
@@ -23,7 +22,7 @@ class CompanyRequest extends Model
         'phone_number',
         'photo',
         'commercial_record',
-        'social_media_account'
+        'status'
     ];
 
     protected $primaryKey="id";
@@ -37,5 +36,11 @@ class CompanyRequest extends Model
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public $with = ['admin'];
+
+    public function admin(){
+        return $this->belongsTo(Admin::class,'admin_id');
+    }
 }
+
 

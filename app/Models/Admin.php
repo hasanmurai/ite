@@ -11,14 +11,13 @@ use Laravel\Passport\HasApiTokens;
 class Admin extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-    //protected $guard = 'admin';
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $table="admins";
-    protected $guard="admins_api";
+
 
     protected $fillable = [
         'username',
@@ -26,7 +25,6 @@ class Admin extends Authenticatable
         'password',
         'phone_number',
         'photo',
-        'social_media_account'
     ];
     protected $primaryKey="id";
     public $timestamps=true;
@@ -50,6 +48,11 @@ class Admin extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function products(){
-        return $this->hasMany(Product::class,'owner_id');
-}}
+    public function companyrequests()
+    {
+        return $this->hasMany(CompanyRequest::class, 'admin_id');
+    }
+    public function exhibitions(){
+        return $this->hasMany(Exhibition::class,'admin_id');}
+
+}

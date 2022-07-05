@@ -15,18 +15,17 @@ return new class extends Migration
     {
         Schema::create('company_requests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('admin_id');
-            $table->foreignId('status_id');
-            $table->string('userame')->unique();
+            $table->foreignId('admin_id')->nullable();
+            $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
             $table->string('company_name')->unique();
             $table->string('company_email')->unique();
             $table->string('company_address');
-            $table->integer('phone_number')->unique();
-            $table->text('social_media_account');
+            $table->text('phone_number')->unique();
             $table->text('photo');
             $table->text('commercial_record');
+            $table->string('status');
             $table->rememberToken();
             $table->timestamps();
 
@@ -43,3 +42,4 @@ return new class extends Migration
         Schema::dropIfExists('company_requests');
     }
 };
+

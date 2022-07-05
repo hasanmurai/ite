@@ -2,267 +2,346 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Admin;
-use App\Models\Company;
-use App\Models\User;
+use App\Models\{Admin,User,Company,CompanyRequest};
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\{Auth,Hash};
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
+
 
 class AuthController extends Controller
 {
+//------------------------------------signup admin-------------------------------------------------------------------------------------------------------
 
     public function admin(Request $request)
     {
-        $request->validate([
-            'username'=>['required','unique:users','unique:admins','unique:companies','max:191','string'],
-            'email'=>['required','email','unique:users','unique:admins','unique:companies','max:191'],
-            'password'=>['required','max:191','string'],
-            'phone_number'=>['required','unique:users','unique:admins','unique:companies','integer'],
-            'photo'=>['required','file'],
-            'social_media_account'=>['required'],
-
+        $a=$request->validate([
+            'username'=>['required','unique:users','unique:company_requests','unique:admins','unique:companies','max:191','string'],
+            'email'=>['required','email','unique:users','unique:admins','unique:company_requests','unique:companies','max:191'],
+            'password'=>['required',Password::min(8)],
+            'phone_number'=>['required','unique:users','unique:admins','unique:company_requests','unique:companies','digits_between:7,12'],
+            'photo'=>['required','image'],
 
 
         ]);
-
-        $pass=$request['password']=Hash::make($request['password']);
-
-
-        if($request->verification_code=='abc'){
-            $file= $request->file('photo');
-            $filename= $file->getClientOriginalName();
-            $file-> move(public_path('public/Image'), $filename);
-            $photo= $filename;
+          if($a) {
+              $pass = $request['password'] = Hash::make($request['password']);
 
 
-            $data=Admin::query()->create([
-                'username'=>$request->username,
-                'email'=>$request->email,
-                'password'=>$pass,
-                'phone_number'=>$request->phone_number,
-                'photo'=>$photo,
-                'social_media_account'=>$request->social_media_account,
+              if ($request->verification_code == 'abc') {
+                  $file = $request->file('photo');
+                  $filename =Str::random(40).$file->getClientOriginalName();
+                  $file->move(public_path('public/Image'),$filename);
+                  $photo = $filename;
 
-            ]);
 
-            return response()->json($data);
-        }
+                  $data = Admin::query()->create([
+                      'username' => $request->username,
+                      'email' => $request->email,
+                      'password' => $pass,
+                      'phone_number' => $request->phone_number,
+                      'photo' => $photo,
 
-        else
-            return response()->json(['not found',404]);
+
+                  ]);
+
+                  return response()->json(['user' => $data]);
+              }return response()->json(['message' => 'verification code incorrect']);
+
+          }
+
+            return response()->json(['message'=>'not found']);
     }
 
-    /*------------------------------------------------------------*/
+//------------------------------------signup user--------------------------------------------------------------------------------------------------------
 
     public function user(Request $request)
     {
         $a = $request->validate([
-            'username' => ['required', 'unique:users', 'unique:admins', 'unique:companies', 'max:191', 'string'],
-            'email' => ['required', 'email', 'unique:users', 'unique:admins', 'unique:companies', 'max:191'],
-            'password' => ['required', 'max:191', 'string'],
-            'phone_number' => ['required', 'unique:users', 'unique:admins', 'unique:companies', 'integer'],
-            'photo' => ['required'],
-            'social_media_account' => ['required'],
-
+            'username' => ['required', 'unique:users','unique:company_requests', 'unique:admins', 'unique:companies', 'max:191', 'string'],
+            'email' => ['required', 'email', 'unique:users', 'unique:admins','unique:company_requests', 'unique:companies', 'max:191'],
+            'password' => ['required',Password::min(8)],
+            'phone_number' => ['required', 'unique:users', 'unique:admins','unique:company_requests', 'unique:companies', 'digits_between:7,12'],
+            'photo' => ['required','image'],
 
 
         ]);
         if ($a) {
+            $pass=$request['password']=Hash::make($request['password']);
+
             $file= $request->file('photo');
-            $filename= $file->getClientOriginalName();
+            $filename=Str::random(40).$file->getClientOriginalName();
             $file-> move(public_path('public/Image'), $filename);
             $photo= $filename;
             $user = User::query()->create([
                 'username' => $request->username,
                 'email' => $request->email,
-                'password' => $request->password,
+                'password' => $pass,
                 'phone_number' => $request->phone_number,
                 'photo' => $photo,
-                'social_media_account' => $request->social_media_account,
+
 
 
             ]);
 
-            return response()->json($user);
+            return response()->json(['user'=>$user]);
         }
         else
-            return response()->json(['not found',404]);
+            return response()->json(['message'=>'not found']);
 
     }
 
-
-
-    /*------------------------------------------------------------*/
-
+//------------------------------------signup company------------------------------------------------------------------------------------------------------
 
     public function company(Request $request)
     {
 
         $a = $request->validate([
-            'username' => ['required', 'unique:users', 'unique:admins', 'unique:companies', 'max:191', 'string'],
-            'email' => ['required', 'email', 'unique:users', 'unique:admins', 'unique:companies', 'max:191'],
-            'password' => ['required', 'max:191', 'string'],
-            'phone_number' => ['required', 'unique:users', 'unique:admins', 'unique:companies', 'integer'],
-            'photo' => ['required'],
-            'social_media_account' => ['required'],
-
-
-            'company_name' => ['required', 'unique:companies', 'max:191', 'string'],
-            'company_email' => ['required', 'email', 'unique:companies', 'max:191'],
+            'username' => ['required', 'unique:users','unique:company_requests', 'unique:admins', 'unique:companies', 'max:191', 'string'],
+            'email' => ['required', 'email', 'unique:users', 'unique:admins','unique:company_requests', 'unique:companies', 'max:191'],
+            'password' => ['required',Password::min(8)],
+            'phone_number' => ['required', 'unique:users', 'unique:admins','unique:company_requests', 'unique:companies', 'digits_between:7,12'],
+            'photo' => ['required','image'],
+            'company_name' => ['required','unique:company_requests', 'unique:companies', 'max:191', 'string'],
+            'company_email' => ['required', 'email','unique:company_requests', 'unique:companies', 'max:191'],
             'company_address' => ['required', 'string'],
-            'commercial_record' => ['required'],
+            'commercial_record' => ['required','image'],
         ]);
+
         if ($a) {
+
+            $pass=$request['password']=Hash::make($request['password']);
             $file= $request->file('photo');
-            $filename= $file->getClientOriginalName();
+            $filename=Str::random(40).$file->getClientOriginalName();
             $file-> move(public_path('public/Image'), $filename);
             $photo= $filename;
-            $data = Company::query()->create([
+            $file= $request->file('commercial_record');
+            $filename=Str::random(40).$file->getClientOriginalName();
+            $file-> move(public_path('public/Image'), $filename);
+            $com= $filename;
+            $data = CompanyRequest::query()->create([
+                'admin_id'=>auth()->id(),
+                'status'=>'waiting',
                 'username' => $request->username,
                 'email' => $request->email,
-                'password' => $request->password,
+                'password' => $pass,
                 'phone_number' => $request->phone_number,
                 'photo' => $photo,
-                'social_media_account' => $request->social_media_account,
                 'company_name' => $request->company_name,
                 'company_email' => $request->company_email,
                 'company_address' => $request->company_address,
-                'commercial_record' => $request->commercial_record,
+                'commercial_record' => $com,
             ]);
 
-            return response()->json($data);
+            return response()->json(['user'=>$data]);
         }
         else
-            return response()->json(["not found",404]);
+            return response()->json(['message'=>'not found']);
     }
 
+//------------------------------------------login--------------------------------------------------------------------------------------------------------
 
-
-
-    /*------------------------------------------------------------*/
     public function login(Request $request)
     {
-         $request->validate([
-            'username' => ['required', 'max:191', 'string'],
-            'password' => ['required', 'max:191', 'string'],
+        $request->validate([
+            'username' => ['required','string'],
+            'password' => ['required','string']
         ]);
 
+ //------------------------------------admin login------------------------------------
 
-        if (Admin::where(['username' => $request->username])->exists()) {
-          $user=Admin::where(['username' => $request->username])->first();
+        if (Admin::query()->where(['username' => $request->username])->exists()) {
+            $user = Admin::query()->where(['username' => $request->username])->first();
 
-          if (Hash::check($request->password,$user->password)){
-            $accessToken = $user->createToken('Personal Access Token')->accessToken;
+            if (Hash::check($request->password, $user->password)) {
+                $accessToken = $user->createToken('Personal Access Token',['admin'])->accessToken;
+                $user->user_type='admin';
+                $data['user']=$user;
+                $data['token_type']='Bearer';
+                $data['access_token']=$accessToken;
 
-            return response()->json(['token',$accessToken]);
+                return response()->json($data);
+            }
+            return response()->json(['message'=>'incorrect password']);
         }
-          return response()->json(['incorrect password']);
+//------------------------------------user login------------------------------------
+
+        elseif (User::query()->where(['username' => $request->username])->exists()) {
+            $user = User::query()->where(['username' => $request->username])->first();
+
+            if (Hash::check($request->password, $user->password)) {
+                $accessToken = $user->createToken('Personal Access Token',['user'])->accessToken;
+
+                $user->user_type='user';
+                $data['user']=$user;
+                $data['token_type']='Bearer';
+                $data['access_token']=$accessToken;
+                return response()->json($data);
+            }
+            return response()->json(['message'=>'incorrect password']);
+        }
+//------------------------------------company login------------------------------------
+
+        elseif (Company::query()->where(['username' => $request->username])->exists()) {
+            $user = Company::query()->where(['username' => $request->username])->first();
+
+            if (Hash::check($request->password, $user->password)) {
+
+                $accessToken = $user->createToken('Personal Access Token',['company'])->accessToken;
+
+                $user->user_type='company';
+                $data['user']=$user;
+                $data['token_type']='Bearer';
+                $data['access_token']=$accessToken;
+                return response()->json($data);
+            }
+            return response()->json(['message'=>'incorrect password']);
         }
 
-        elseif (User::where(['username' => $request->username])->exists()) {
-          $user=User::where(['username' => $request->username])->first();
+            return response()->json(['message'=>'incorrect username']);
+    }
+//------------------------------------logout-------------------------------------------------------------------------------------------------------------
 
-          if (Hash::check($request->password,$user->password)){
-            $accessToken = $user->createToken('Personal Access Token')->accessToken;
+    public function logout(Request $request){
 
-            return response()->json(['token',$accessToken]);
+        $request->user()->token()->revoke();
+
+        return response()->json([
+            "message"=>"user logged out successfully"
+        ]);}
+
+//------------------------------------edit admin-------------------------------------------------------------------------------------------------------
+
+    public function edit_admin(Request $request)
+    {
+        if ($request->user()->tokenCan('admin')) {
+        $id=Auth::id();
+
+            $a=$request->validate([
+                'photo'=>['image'],
+                'username' => ['unique:users','unique:admins','unique:company_requests', 'unique:companies', 'max:191', 'string'],
+                'phone_number' => ['digits_between:7,12','unique:users', 'unique:admins','unique:company_requests', 'unique:companies'],
+                'password' => [Password::min(8)],
+
+            ]);
+            if($request->photo){
+            $file= $request->file('photo');
+            $filename=Str::random(40).$file->getClientOriginalName();
+            $file-> move(public_path('public/Image'), $filename);
+            $photo= $filename;}
+            if ($request->password){
+                $pass=$request['password']=Hash::make($request['password']);
+            }
+
+            if ($a){
+            $data=Admin::query()->find($id);
+            $data->username= $request->username ?? $data->username;
+            $data->phone_number= $request->phone_number ?? $data->phone_number;
+            $data->photo= $photo ?? $data->photo;
+            $data->password= $pass ?? $data->password;
+            $data->save();
+            $data=Admin::query()->find($id);
+                return response()->json(['message'=>'info updated','user'=>$data]);
+            }
+            else
+                return response()->json(['message'=>'incorrect information']);
         }
-          return response()->json(['incorrect password']);
-        }
 
-        elseif (Company::where(['username' => $request->username])->exists()) {
-          $user=Company::where(['username' => $request->username])->first();
-
-          if (Hash::check($request->password,$user->password)){
-            $accessToken = $user->createToken('Personal Access Token')->accessToken;
-
-            return response()->json(['token',$accessToken]);
-        }
-          return response()->json(['incorrect password']);
-        }
-        else
-            return response()->json('error',404);
-
+            return response()->json(['message'=>'access denied']);
     }
 
+//------------------------------------edit user---------------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function edit_user(Request $request)
     {
-        //
+        if ($request->user()->tokenCan('user')) {
+
+            $id=Auth::id();
+
+            $aa=$request->validate([
+                'photo'=>['image'],
+                'username' => ['unique:users','unique:admins','unique:company_requests', 'unique:companies', 'max:191', 'string'],
+                'phone_number' => ['digits_between:7,12','unique:users','unique:company_requests', 'unique:admins', 'unique:companies'],
+                'password' => [Password::min(8)],
+
+            ]);
+            if($request->photo){
+                $file= $request->file('photo');
+                $filename=Str::random(40).$file->getClientOriginalName();
+                $file-> move(public_path('public/Image'), $filename);
+                $photo= $filename;}
+            if ($request->password){
+                $pass=$request['password']=Hash::make($request['password']);
+            }
+
+            if ($aa){
+                $data=User::query()->find($id);
+                $data->username= $request->username ?? $data->username;
+                $data->phone_number= $request->phone_number ?? $data->phone_number;
+                $data->photo= $photo ?? $data->photo;
+                $data->password= $pass ?? $data->password;
+                $data->save();
+                $data=User::query()->find($id);
+                return response()->json(['message'=>'info updated','user'=>$data]);
+            }
+            else
+                return response()->json(['message'=>'incorrect information']);
+        }
+        return response()->json(['message'=>'access denied']);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+//------------------------------------edit company-------------------------------------------------------------------------------------------------------
+
+
+    public function edit_company(Request $request)
     {
-        //
+        if ($request->user()->tokenCan('company')) {
+
+            $id = Auth::id();
+
+                $aa = $request->validate([
+                    'photo' => ['image'],
+                    'username' => ['unique:users', 'unique:admins', 'unique:company_requests', 'unique:companies', 'max:191', 'string'],
+                    'phone_number' => ['digits_between:7,12', 'unique:users', 'unique:company_requests', 'unique:admins', 'unique:companies'],
+                    'password' => [Password::min(8)],
+                    'company_name' => ['unique:company_requests', 'unique:companies', 'max:191', 'string'],
+                    'company_email' => ['email', 'unique:companies', 'max:191'],
+                    'company_address' => ['string'],
+
+
+                ]);
+                if ($request->photo) {
+                    $file = $request->file('photo');
+                    $filename =Str::random(40).$file->getClientOriginalName();
+                    $file->move(public_path('public/Image'), $filename);
+                    $photo = $filename;
+                }
+                if ($request->password) {
+                    $pass = $request['password'] = Hash::make($request['password']);
+                }
+
+                if ($aa) {
+                    $data = Company::query()->find($id);
+                    $data->username = $request->username ?? $data->username;
+                    $data->phone_number = $request->phone_number ?? $data->phone_number;
+                    $data->company_name = $request->company_name ?? $data->company_name;
+                    $data->company_email = $request->company_email ?? $data->company_email;
+                    $data->company_address = $request->company_address ?? $data->company_address;
+                    $data->photo = $photo ?? $data->photo;
+                    $data->password = $pass ?? $data->password;
+                    $data->save();
+                    $data = Company::query()->find($id);
+                    return response()->json(['message' => 'info updated', 'user' => $data]);
+                }
+                else
+                    return response()->json(['message'=>'incorrect information']);
+        }
+        return response()->json(['message'=>'access denied']);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    public function image($file)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+        $data=public_path().'/public/Image/'.$file;
+        return response()->file($data);
     }
 }

@@ -18,8 +18,7 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
-            $table->integer('phone_number');
-            $table->text('social_media_account');
+            $table->text('phone_number')->unique();
             $table->text('photo');
             $table->timestamps();
             $table->rememberToken();

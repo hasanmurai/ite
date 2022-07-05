@@ -18,14 +18,13 @@ class User extends Authenticatable
      * @var array<int, string>
      */
 
-
+protected $guard='api';
     protected $fillable = [
         'username',
         'email',
         'password',
         'phone_number',
         'photo',
-        'social_media_account'
     ];
 
     /**
@@ -46,4 +45,6 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function invites(){
+        return $this->hasMany(Invite::class,'user_id');}
 }

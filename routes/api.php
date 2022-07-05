@@ -1,6 +1,11 @@
 <?php
 
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\{AuthController,
+    CompanyRequestController,
+    ExhibitionController,
+    InviteController,
+    ProductController,
+    RegisterRequestController};
 
 use Illuminate\Support\Facades\Route;
 
@@ -15,10 +20,75 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('/signup_admin',[AuthController::class,'admin']);
-Route::post('/signup_user',[AuthController::class,'user']);
-Route::post('/signup_company',[AuthController::class,'company']);
-Route::post('/login',[AuthController::class,'login']);
-Route::middleware(['auth:admin_api'])->group(function() {
-Route::post('/a',[AuthController::class,'ad']);});
+Route::get('/image/{file}',[AuthController::class,'image']);
+
+    Route::prefix('signup')->group(function() {
+        Route::post('/admin', [AuthController::class, 'admin']);
+        Route::post('/user', [AuthController::class, 'user']);
+        Route::post('/company', [AuthController::class, 'company']);
+    });
+
+    Route::post('/login', [AuthController::class, 'login']);
+
+    Route::prefix('show')->group(function() {
+        Route::get('/exhibitions', [ExhibitionController::class, 'show_exh']);
+        Route::get('/pavilions/{id}', [ExhibitionController::class, 'show_pav']);
+        Route::get('/user/pavilions/{id}', [ExhibitionController::class, 'show_user_pav']);
+        Route::get('/products/{id}', [ProductController::class, 'show']);
+        Route::get('/managers/{id}', [ProductController::class, 'show_managers']);
+    });
+
+
+    Route::middleware(['auth:api,admin-api,company-api'])->group(function() {
+
+        Route::prefix('show')->group(function() {
+            Route::get('/request', [CompanyRequestController::class, 'show_request']);
+            Route::get('/register', [RegisterRequestController::class, 'show_register']);
+            Route::get('/my_exhibitions', [ExhibitionController::class, 'show_my_exh']);
+        });
+        Route::prefix('invite')->group(function() {
+            Route::get('/send/{table_id}&{user_id}', [InviteController::class, 'invite']);
+            Route::get('/accept/{id}', [InviteController::class, 'accept_invite']);
+            Route::delete('/reject/{id}', [InviteController::class, 'reject_invite']);
+            Route::get('/show', [InviteController::class, 'show_invites']);
+        });
+
+        Route::prefix('edit')->group(function (){
+            Route::post('/admin', [AuthController::class, 'edit_admin']);
+            Route::post('/user', [AuthController::class, 'edit_user']);
+            Route::post('/company', [AuthController::class, 'edit_company']);
+        });
+        Route::prefix('table')->group(function (){
+            Route::get('/register/{id}', [RegisterRequestController::class, 'register_table']);
+            Route::get('/accept/{id}', [RegisterRequestController::class, 'accept_table']);
+            Route::delete('/reject/{id}', [RegisterRequestController::class, 'reject_table']);
+        });
+
+        Route::prefix('exhibition')->group(function (){
+            Route::post('/add', [ExhibitionController::class, 'add_exh']);
+            Route::post('/pavilion/add/{id}', [ExhibitionController::class, 'add_pavilion']);
+            Route::post('/edit/{id}', [ExhibitionController::class, 'update_exh']);
+            Route::delete('/delete/{id}', [ExhibitionController::class, 'delete_exh']);
+        });
+
+        Route::prefix('company')->group(function() {
+            Route::get('/accept/{id}', [CompanyRequestController::class, 'accept']);
+            Route::get('/reject/{id}', [CompanyRequestController::class, 'reject']);
+            Route::delete('/delete/{id}', [CompanyRequestController::class, 'delete']);
+        });
+
+        Route::get('/logout', [AuthController::class, 'logout']);
+
+        Route::prefix('product')->group(function() {
+            Route::post('/add/{id}', [ProductController::class, 'add_product']);
+            Route::post('/edit/{id}', [ProductController::class, 'edit_product']);
+            Route::delete('/delete/{id}', [ProductController::class, 'delete_product']);
+
+
+
+        });
+    });
+
+
+
 

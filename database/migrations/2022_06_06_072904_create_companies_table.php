@@ -21,8 +21,7 @@ return new class extends Migration
             $table->string('company_name')->unique();
             $table->string('company_email')->unique();
             $table->string('company_address');
-            $table->integer('phone_number')->unique();
-            $table->text('social_media_account');
+            $table->text('phone_number')->unique();
             $table->text('photo');
             $table->text('commercial_record');
             $table->rememberToken();

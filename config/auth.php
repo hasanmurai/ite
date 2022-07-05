@@ -37,21 +37,35 @@ return [
 
     'guards' => [
         'web' => [
-            'driver' => 'passport',
+            'driver' => 'session',
             'provider' => 'users',
-        ],'api' => [
+        ],
+
+        'api' => [
             'driver' => 'passport',
-            'provider' => 'users',
-        ],'admin_api' => [
+            'provider' => 'users'
+        ],
+
+//        'admin' => [
+//            'driver' => 'session',
+//            'provider' => 'admins',
+//        ],
+        'admin-api' => [
             'driver' => 'passport',
             'provider' => 'admins',
-        ],'company_api' => [
+            'hash' => false,
+        ],
+//
+//        'company' => [
+//            'driver' => 'session',
+//            'provider' => 'companies',
+//        ],
+//
+        'company-api' => [
             'driver' => 'passport',
             'provider' => 'companies',
-        ],'aaa_api' => [
-            'driver' => 'passport',
-            'provider' => 'aabb',
-        ],
+            'hash' => false,
+        ]
     ],
 
     /*
@@ -75,21 +89,15 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
-        ],'admins' => [
+        ],
+        'admins' => [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class,
         ],'companies' => [
             'driver' => 'eloquent',
             'model' => App\Models\Company::class,
-        ],'aabb' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\AAA::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*
@@ -110,6 +118,16 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
+            'table' => 'password_resets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],'admins' => [
+            'provider' => 'admins',
+            'table' => 'password_resets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],'companies' => [
+            'provider' => 'companies',
             'table' => 'password_resets',
             'expire' => 60,
             'throttle' => 60,

@@ -13,12 +13,15 @@ class Product extends Model
     protected $table="products";
     protected $fillable = [
         'name',
-        'admin_id'
+        'table_id',
+        'photo',
+        'price'
     ];
 
     protected $primaryKey="id";
     public $timestamps=true;
-    public function owner(){
-        return $this->belongsTo(Admin::class,'owner_id');
+    public $with=['table'];
+    public function table(){
+        return $this->belongsTo(Table::class,'table_id');
     }
 }
