@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class RegisterRequestController extends Controller
 {
-    //--
+
     public function show_register(Request $request)
     {
         if ($request->user()->tokenCan('admin')) {
