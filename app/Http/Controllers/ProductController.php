@@ -3,7 +3,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Invite, Product, RegisterRequest, Table, User};
+use App\Models\{Invite, Product, Table, User};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -169,7 +169,7 @@ class ProductController
                     return response()->json(['message' => "you don't have permission"]);
 
         }
-            elseif ($request->user()->tokenCan('user')&&Invite::query()->where(['user_id'=>auth()->id(),'table_id'=>$b->table_id]))
+            elseif ($request->user()->tokenCan('user')&&Invite::query()->where(['user_id'=>auth()->id(),'table_id'=>$b->table_id])->exists())
             {
                 $b->delete();
                 return response()->json(['message' => 'deleted successfully']);

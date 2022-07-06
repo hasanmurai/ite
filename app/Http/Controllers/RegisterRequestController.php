@@ -48,15 +48,15 @@ class RegisterRequestController extends Controller
             $id = (int)$id;
             if (Table::query()->where(['id' => $id])->exists()) {
                 if (Table::query()->find($id)->company_id == null) {
-                    $table = Table::query()->find($id)->table_number;
-                    if (RegisterRequest::query()->where(['table_number' => $table, 'company_id' => auth()->id()])->doesntExist()) {
+                    $table = Table::query()->find($id);
+                    if (RegisterRequest::query()->where(['table_id' => $table->id, 'company_id' => auth()->id()])->doesntExist()) {
                         $com = Company::query()->find(auth()->id());
 
 
                         $data = RegisterRequest::create([
                             'company_id' => auth()->id(),
                             'table_id' => $id,
-                            'table_number' => $table,
+                            'table_number' => $table->table_number,
                             'company_name' => $com->company_name,
                             'company_email' => $com->company_email,
                             'phone_number' => $com->phone_number,
