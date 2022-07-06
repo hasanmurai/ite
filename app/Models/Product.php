@@ -24,4 +24,8 @@ class Product extends Model
     public function table(){
         return $this->belongsTo(Table::class,'table_id');
     }
+    public function productlikes()
+    {
+        return $this->hasMany(ProductLike::class,'product_id');
+    }
 }

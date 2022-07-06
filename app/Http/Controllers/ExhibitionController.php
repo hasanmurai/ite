@@ -30,7 +30,7 @@ class ExhibitionController extends Controller
           if ($request->user()->tokenCan('admin')) {
           $data=Exhibition::query();
           if ($data->where(['admin_id'=>auth()->id()])->exists()){
-              $data=$data->where(['admin_id'=>auth()->id()])->get();
+              $data=$data->without('admin')->where(['admin_id'=>auth()->id()])->get();
               return response()->json(['my exhibitions'=>$data]);
           }
           else
@@ -91,10 +91,6 @@ class ExhibitionController extends Controller
               'district'=>['required','string'],
               'city'=>['required','string'],
               'photo'=>['required','image'],
-//              'list_pav.*.name'=>['required','string',],
-//              'list_pav.*.start'=>['digits_between:1,2','lt:list_pav.*.end'],
-//              'list_pav.*.end'=>['digits_between:1,2'],
-//              'list_pav.*.price'=>['digits_between:1,100']
 
           ]);
 
@@ -116,33 +112,6 @@ class ExhibitionController extends Controller
                   'status'=>'pre'
 
               ]);
-
-
-//              foreach($request->list_pav as $pav){
-//                  if ($pav['start']<=0 || $pav['start']>20 || $pav['end']<=0 || $pav['end']>20)return response()->json(['message'=>false]);
-//
-//                  foreach ($data->pavilions()->get() as $item)
-//                  {
-//                      if (!($pav['start']>$item->start&&$pav['start']>$item->end&&$pav['end']>$item->start&&$pav['end']>$item->end||
-//                          $pav['start']<$item->start&&$pav['start']<$item->end&&$pav['end']<$item->start&&$pav['end']<$item->end))
-//                          return response()->json(['message'=>'table had been token']);
-//                  }
-//
-//                 $pavilion=$data->pavilions()->create([
-//                      'name'=>$pav['name'],
-//                      'start'=>$pav['start'],
-//                      'end'=>$pav['end'],
-//                      'price'=>$pav['price']
-//                  ]);
-//                  for ($i=$pav['start'];$i<=$pav['end'];$i++)
-//                  {
-//                      $pavilion->tables()->create([
-//                          'table_number'=>$i,
-//
-//                      ]);
-//                  }
-//          }
-
 
               return response()->json(['message'=>'exhibition added successfully','exhibition'=>$data]);
           }

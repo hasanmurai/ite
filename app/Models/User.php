@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -46,5 +45,8 @@ protected $guard='api';
         'email_verified_at' => 'datetime',
     ];
     public function invites(){
-        return $this->hasMany(Invite::class,'user_id');}
+        return $this->hasMany(Invite::class,'user_id');
+    }
+   public function productlikes(){
+        return $this->hasMany(ProductLike::class,'user_id');}
 }
