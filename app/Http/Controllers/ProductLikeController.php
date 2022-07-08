@@ -2,64 +2,39 @@
 
 namespace App\Http\Controllers;
 
+
+
+use App\Models\Product;
 use App\Models\ProductLike;
-use App\Http\Requests\StoreProductLikeRequest;
-use App\Http\Requests\UpdateProductLikeRequest;
+use Illuminate\Http\Request;
 
 class ProductLikeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function like(Request $request,$id)
     {
-        //
+        if ($request->user()->tokenCan('user'))
+        {
+            if (Product::query()->where('id',$id)->exists()){
+                if (ProductLike::query()->where(['product_id'=>$id,'user_id'=>auth()->id()])->doesntExist()){
+                    ProductLike::query()->create([
+                        'user_id'=>auth()->id(),
+                        'product_id'=>$id
+                    ]);
+                    Product::query()->find($id)->increment('likes');
+
+                    return response()->json(['message'=>'like added']);
+                }
+                else{
+                    ProductLike::query()->where(['product_id'=>$id,'user_id'=>auth()->id()])->delete();
+                    Product::query()->find($id)->decrement('likes');
+
+                    return response()->json(['message'=>'like removed']);
+                }
+            } else
+                return response()->json(['message'=>'product not found']);
+        }
+        else
+            return response()->json(['message'=>'access denied']);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \App\Http\Requests\StoreProductLikeRequest  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(StoreProductLikeRequest $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\ProductLike  $productLike
-     * @return \Illuminate\Http\Response
-     */
-    public function show(ProductLike $productLike)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\UpdateProductLikeRequest  $request
-     * @param  \App\Models\ProductLike  $productLike
-     * @return \Illuminate\Http\Response
-     */
-    public function update(UpdateProductLikeRequest $request, ProductLike $productLike)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\ProductLike  $productLike
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(ProductLike $productLike)
-    {
-        //
-    }
 }

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('photo');
             $table->text('price');
+            $table->integer('likes')->default(0);
             $table->timestamps();
         });
     }

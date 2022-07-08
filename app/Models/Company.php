@@ -55,6 +55,9 @@ class Company extends Authenticatable
     public function tables()
     {
         return $this->hasMany(Table::class,'company_id');
+    } public function productlikes()
+    {
+        return $this->hasMany(ProductLike::class,'company_id');
     }
     public function register_requests()
     {

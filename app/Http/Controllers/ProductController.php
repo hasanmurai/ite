@@ -15,16 +15,20 @@ class ProductController
     public function show_managers($id)
     {
         if (Table::query()->find($id))
-        {
+        {if (Invite::query()->where('table_id',$id)->exists()){
             $man=Invite::query()->where('table_id',$id)->get();
             foreach ($man as $item) {
                 $data[]=User::query()->find($item->user_id);
 
             }
             return response()->json(['message'=>$data]);
+        }else
+            return response()->json(['message'=>[]]);
+
+
         }
         else
-            return response()->json(['message'=>'table not found']);
+            return response()->json(['message'=>[]]);
 
     }
     //-----------------------------------show products by table id------------------------------------------------------------------------------------------
@@ -33,8 +37,8 @@ class ProductController
     public function show($id)
     {
         if( Product::without(['table'])->where('table_id',$id)->exists())
-            return response()->json(['products' => Product::without(['table'])->where('table_id',$id)->get()]);
-        return response()->json(['message'=>'no products found']);
+            return response()->json(['message' => Product::without(['table'])->where('table_id',$id)->get()]);
+        return response()->json(['message'=>[]]);
     }
     //-----------------------------------add products------------------------------------------------------------------------------------------------------
 

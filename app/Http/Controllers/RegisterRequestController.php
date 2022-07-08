@@ -37,7 +37,7 @@ class RegisterRequestController extends Controller
             if (!$i == 0)
                 return response()->json(['message' => $req]);
             else
-                return response()->json(['message' => 'no requests found']);
+                return response()->json(['message' => []]);
         } else
             return response()->json(['message' => 'access denies']);
     }

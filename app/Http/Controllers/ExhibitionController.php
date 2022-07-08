@@ -21,7 +21,7 @@ class ExhibitionController extends Controller
               if (Carbon::parse($item->exhibition_end) <= now()){$item->delete();}
           }
 
-         return response()->json(['message'=>Exhibition::without(['admin'])->orderBy('name')->get()]);
+         return response()->json(['message'=> Carbon::parse('2225-2-22')->day-5]);
       }
     //---------------------------------show my exhibitions--------------------------------------------------------------------------------------------------
 
@@ -34,8 +34,9 @@ class ExhibitionController extends Controller
               return response()->json(['my exhibitions'=>$data]);
           }
           else
-              return response()->json(['message'=>'no exhibitions found']);
-      }return response()->json(['message'=>'access denied']);
+              return response()->json(['message'=>[]]);
+      }
+          return response()->json(['message'=>'access denied']);
       }
 
 
@@ -43,39 +44,55 @@ class ExhibitionController extends Controller
 
     public function show_pav($id)
     {
-        if ($data = Exhibition::query()->find($id)){
-            $data=$data->pavilions()->without('exhibition')->get();
-            $i=0;
-        foreach ($data as $item) {
-            $table = Pavilion::query()->find($item->id);
-            $tables[++$i]=$table->tables()->get();
+        if ( Exhibition::query()->where('id',$id)->exists()) {
+            $data = Exhibition::query()->find($id);
+            $data = $data->pavilions()->without('exhibition')->get();
+            $i = 0;
+            foreach ($data as $item) {
+                $table = Pavilion::query()->find($item->id);
+                $tables[] =['pavilion'=>$item,'table'=>$table->tables()->without('pavilion','company')->get()];
+                ++$i;
+            }
+            if (!$i == 0)
+                return response()->json(['message'=>$tables]);
 
+            else
+                return response()->json(['message' => []]);
         }
-        return response()->json(['pavilions' => $tables]);
+        else
+            return response()->json(['message' => 'exhibition not found']);
+
     }
-          else
-              return response()->json(['message'=>'exhibition not found']);
-      }
     //---------------------------------show pavilions for user-----------------------------------------------------------------------------------------------
 
     public function show_user_pav($id)
     {
-        if ($data = Pavilion::query()->find($id)){
-            $data1=$data->tables()->without('pavilion','company')->get();
-            $i=0;
-            foreach ($data1 as $item) {
-                if (!$item->company_id==null){
-                    $table[]=$item;
-                    $i++;}}
+        if ( Exhibition::query()->where('id',$id)->exists()) {
+            $data = Exhibition::query()->find($id);
+            $data = $data->pavilions()->without('exhibition')->get();
+            $i = 0;
 
-            if (!$i==0){
-                return response()->json(['message'=>$table]);
+            foreach ($data as $item) {
+               // $table = Pavilion::query()->find($item->id);
+                $data=$item->tables()->without('pavilion','company')->get();
+                foreach ( $data as $item1) {
+                    if (!$item1->company_id==null){
+                        $data1[]=$item1;
+                    }
+                }
+                if ($data1)
+                $tables[] =['pavilion'=>$item,'table'=>$data1];
+                ++$i;
+                $data1=null;
             }
+            if (!$i == 0)
+                return response()->json(['message'=>$tables]);
+
             else
-                return response()->json(['message'=>null]);
+                return response()->json(['message' => []]);
         }
         else
-            return response()->json(['message'=>'pavilion not found']);
+            return response()->json(['message' => 'exhibition not found']);
     }
 
     //---------------------------------add exhibition----------------------------------------------------------------------------------------------------
@@ -132,7 +149,9 @@ class ExhibitionController extends Controller
                   'end' => ['digits_between:1,2'],
                   'price' => ['digits_between:1,100']
               ]);
-              $exh = Exhibition::query()->find($id);
+              if( Exhibition::query()->where('id',$id)->exists()){
+                  $exh = Exhibition::query()->find($id);
+
               if ($exh->admin_id == auth()->id()) {
                   foreach ($exh->pavilions()->get() as $item) {
                       if (!($request->start > $item->start && $request->start > $item->end && $request->end > $item->start && $request->end > $item->end ||
@@ -155,6 +174,9 @@ class ExhibitionController extends Controller
                   }
                   return response()->json(['message'=>'pavilion added successfully']);
               }
+              else
+                  return response()->json(['message'=>'exhibition not found']);
+          }
               else
                   return response()->json(['message'=>"you don't have permission"]);
           }

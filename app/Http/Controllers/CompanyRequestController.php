@@ -58,7 +58,7 @@ class CompanyRequestController extends Controller
         if ($request->user()->tokenCan('admin')) {
             $data = CompanyRequest::query();
             if ($data->where(['id' => $id])->exists()) {
-                if ($data->find($id)->value('status') == 'waiting') {
+                if ($data->find($id)->status == 'waiting') {
                     $a = $data->find($id);
                     $a->delete();
 

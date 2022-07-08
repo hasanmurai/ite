@@ -5,6 +5,7 @@ use App\Http\Controllers\{AuthController,
     ExhibitionController,
     InviteController,
     ProductController,
+    ProductLikeController,
     RegisterRequestController};
 
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/image/{file}',[AuthController::class,'image']);
+
+    Route::post('/search',[InviteController::class,'search']);
 
     Route::prefix('signup')->group(function() {
         Route::post('/admin', [AuthController::class, 'admin']);
@@ -76,6 +79,8 @@ Route::get('/image/{file}',[AuthController::class,'image']);
             Route::get('/reject/{id}', [CompanyRequestController::class, 'reject']);
             Route::delete('/delete/{id}', [CompanyRequestController::class, 'delete']);
         });
+
+        Route::get('/like/{id}', [ProductLikeController::class, 'like']);
 
         Route::get('/logout', [AuthController::class, 'logout']);
 

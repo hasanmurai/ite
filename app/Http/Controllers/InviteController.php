@@ -9,6 +9,15 @@ use Illuminate\Http\Request;
 
 class InviteController extends Controller
 {
+    public function search(Request $request){
+        $request->validate(['username'=>['required','string']]);
+        if(User::query()->where('username',$request->username)->exists()){
+            $data=User::query()->where('username',$request->username)->get();
+            return response()->json(['message'=>$data]);
+        }
+        else
+            return response()->json(['message'=>[]]);
+    }
 
     public function invite(Request $request,$table_id,$user_id){
         if ($request->user()->tokenCan('company'))
