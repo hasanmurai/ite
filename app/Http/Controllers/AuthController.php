@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Admin,User,Company,CompanyRequest};
+use App\Models\{Admin, Table, User, Company, CompanyRequest};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth,Hash};
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 
@@ -25,7 +26,7 @@ class AuthController extends Controller
 
         ]);
           if($a) {
-              $pass = $request['password'] = Hash::make($request['password']);
+              $pass = Hash::make($request['password']);
 
 
               if ($request->verification_code == 'abc') {
@@ -67,7 +68,7 @@ class AuthController extends Controller
 
         ]);
         if ($a) {
-            $pass=$request['password']=Hash::make($request['password']);
+            $pass=Hash::make($request['password']);
 
             $file= $request->file('photo');
             $filename=Str::random(40).$file->getClientOriginalName();
@@ -110,7 +111,7 @@ class AuthController extends Controller
 
         if ($a) {
 
-            $pass=$request['password']=Hash::make($request['password']);
+            $pass=Hash::make($request['password']);
             $file= $request->file('photo');
             $filename=Str::random(40).$file->getClientOriginalName();
             $file-> move(public_path('public/Image'), $filename);
@@ -215,31 +216,33 @@ class AuthController extends Controller
     public function edit_admin(Request $request)
     {
         if ($request->user()->tokenCan('admin')) {
-        $id=Auth::id();
+            $id=auth()->id();
+            $data=Admin::query()->find($id);
+
 
             $a=$request->validate([
                 'photo'=>['image'],
-                'username' => ['unique:users','unique:admins','unique:company_requests', 'unique:companies', 'max:191', 'string'],
-                'phone_number' => ['digits_between:7,12','unique:users', 'unique:admins','unique:company_requests', 'unique:companies'],
+                'username' => ['unique:users','nullable',Rule::unique('admins')->ignore($id),'unique:company_requests', 'unique:companies', 'max:191', 'string'],
+                'phone_number' => [
+                    'digits_between:7,12', 'unique:users','nullable',
+                    Rule::unique('admins')->ignore($id),'unique:company_requests', 'unique:companies'],
                 'password' => [Password::min(8)],
 
             ]);
-            if($request->photo){
+            if ($a){
+
+            if($request->photo) {
             $file= $request->file('photo');
             $filename=Str::random(40).$file->getClientOriginalName();
             $file-> move(public_path('public/Image'), $filename);
-            $photo= $filename;}
-            if ($request->password){
-                $pass=$request['password']=Hash::make($request['password']);
             }
 
-            if ($a){
-            $data=Admin::query()->find($id);
             $data->username= $request->username ?? $data->username;
             $data->phone_number= $request->phone_number ?? $data->phone_number;
             $data->photo= $photo ?? $data->photo;
-            $data->password= $pass ?? $data->password;
+            $data->password=Hash::make($request->password) ?? $data->password;
             $data->save();
+
             $data=Admin::query()->find($id);
                 return response()->json(['message'=>'info updated','user'=>$data]);
             }
@@ -271,7 +274,7 @@ class AuthController extends Controller
                 $file-> move(public_path('public/Image'), $filename);
                 $photo= $filename;}
             if ($request->password){
-                $pass=$request['password']=Hash::make($request['password']);
+                $pass=Hash::make($request['password']);
             }
 
             if ($aa){
@@ -317,10 +320,20 @@ class AuthController extends Controller
                     $photo = $filename;
                 }
                 if ($request->password) {
-                    $pass = $request['password'] = Hash::make($request['password']);
+                    $pass = Hash::make($request['password']);
                 }
 
                 if ($aa) {
+                    $table=Table::query()->where('company_id',$id);
+                    if ($table->exists()){
+                        $table1=$table->get();
+                        foreach ($table1 as $item) {
+                            $item->company_name = $request->company_name ?? $item->company_name;
+                            $item->company_email = $request->company_email ?? $item->company_email;
+                            $item->phone_number = $request->phone_number ?? $item->phone_number;
+                            $item->save();
+                        }
+                    }
                     $data = Company::query()->find($id);
                     $data->username = $request->username ?? $data->username;
                     $data->phone_number = $request->phone_number ?? $data->phone_number;

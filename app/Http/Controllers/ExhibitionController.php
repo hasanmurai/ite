@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Exhibition,Pavilion};
+use App\Models\{Exhibition, Pavilion, Product, ProductLike, Table};
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -14,14 +14,36 @@ class ExhibitionController extends Controller
 
       public function show_exh()
       {
-          foreach (Exhibition::all() as $item) {
+          $data=Exhibition::all();
+          foreach ($data as $item) {
 
-              if(Carbon::parse($item->exhibition_start) <= now()){$item->status='0n';$item->save();}
-              if(Carbon::parse($item->exhibition_start) >= now()){$item->status='pre';$item->save();}
-              if (Carbon::parse($item->exhibition_end) <= now()){$item->delete();}
+              $start=Carbon::parse($item->exhibition_start);
+              if($start <= now()){$item->status='0n';$item->save();}
+              if($start> now()){$item->status='pre';$item->save();}
+              $end=Carbon::parse($item->exhibition_end);
+              $end->day=$end->day+1;
+              if ($end<now()){
+
+                  $pav=$item->pavilions()->get();
+                  foreach ($pav as $item1) {
+                      $tab=Table::query()->where('pavilion_id',$item1->id)->get();
+                      foreach ($tab as $item2) {
+                          $pro=$item2->products()->get();
+                          $item2->invites()->delete();
+                          $item2->registerrequests()->delete();
+                          foreach ($pro as $item3) {
+                              ProductLike::query()->find($item3->id)->delete();
+                          }
+                          $item2->products()->delete();
+                      }
+                      Table::query()->where('pavilion_id',$item1->id)->delete();
+                  }
+                  $item->pavilions()->delete();
+                  $item->delete();
+              }
           }
 
-         return response()->json(['message'=> Carbon::parse('2225-2-22')->day-5]);
+         return response()->json(['message'=> Exhibition::query()->without('admin')->get()]);
       }
     //---------------------------------show my exhibitions--------------------------------------------------------------------------------------------------
 
@@ -116,6 +138,7 @@ class ExhibitionController extends Controller
               $filename =Str::random(40).$file->getClientOriginalName();
               $file->move(public_path('public/Image'),$filename);
               $photo = $filename;
+
 
               $data=Exhibition::query()->create([
                   'admin_id'=>auth()->id(),
