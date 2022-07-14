@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\{Admin, Table, User, Company, CompanyRequest};
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Auth,Hash};
+use Illuminate\Support\Facades\{Auth, Hash, Validator};
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -23,11 +23,8 @@ class AuthController extends Controller
             'phone_number'=>['required','unique:users','unique:admins','unique:company_requests','unique:companies','digits_between:7,12'],
             'photo'=>['required','image'],
 
-
         ]);
           if($a) {
-              $pass = Hash::make($request['password']);
-
 
               if ($request->verification_code == 'abc') {
                   $file = $request->file('photo');
@@ -39,14 +36,19 @@ class AuthController extends Controller
                   $data = Admin::query()->create([
                       'username' => $request->username,
                       'email' => $request->email,
-                      'password' => $pass,
+                      'password' => Hash::make($request['password']),
                       'phone_number' => $request->phone_number,
                       'photo' => $photo,
 
 
                   ]);
+                  $accessToken = $data->createToken('Personal Access Token',['admin'])->accessToken;
+                  $data->user_type='admin';
+                  $data1['user']=$data;
+                  $data1['token_type']='Bearer';
+                  $data1['access_token']=$accessToken;
 
-                  return response()->json(['user' => $data]);
+                  return response()->json($data1);
               }return response()->json(['message' => 'verification code incorrect']);
 
           }
@@ -58,17 +60,14 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        $a = $request->validate([
+        $validator = $request->validate([
             'username' => ['required', 'unique:users','unique:company_requests', 'unique:admins', 'unique:companies', 'max:191', 'string'],
             'email' => ['required', 'email', 'unique:users', 'unique:admins','unique:company_requests', 'unique:companies', 'max:191'],
             'password' => ['required',Password::min(8)],
             'phone_number' => ['required', 'unique:users', 'unique:admins','unique:company_requests', 'unique:companies', 'digits_between:7,12'],
             'photo' => ['required','image'],
 
-
         ]);
-        if ($a) {
-            $pass=Hash::make($request['password']);
 
             $file= $request->file('photo');
             $filename=Str::random(40).$file->getClientOriginalName();
@@ -77,20 +76,23 @@ class AuthController extends Controller
             $user = User::query()->create([
                 'username' => $request->username,
                 'email' => $request->email,
-                'password' => $pass,
+                'password' => Hash::make($request['password']),
                 'phone_number' => $request->phone_number,
                 'photo' => $photo,
 
-
-
             ]);
+        $accessToken = $user->createToken('Personal Access Token',['user'])->accessToken;
 
-            return response()->json(['user'=>$user]);
+        $user->user_type='user';
+        $data['user']=$user;
+        $data['token_type']='Bearer';
+        $data['access_token']=$accessToken;
+
+            return response()->json($data);
         }
-        else
-            return response()->json(['message'=>'not found']);
 
-    }
+
+
 
 //------------------------------------signup company------------------------------------------------------------------------------------------------------
 
@@ -111,7 +113,6 @@ class AuthController extends Controller
 
         if ($a) {
 
-            $pass=Hash::make($request['password']);
             $file= $request->file('photo');
             $filename=Str::random(40).$file->getClientOriginalName();
             $file-> move(public_path('public/Image'), $filename);
@@ -125,7 +126,7 @@ class AuthController extends Controller
                 'status'=>'waiting',
                 'username' => $request->username,
                 'email' => $request->email,
-                'password' => $pass,
+                'password' => Hash::make($request['password']),
                 'phone_number' => $request->phone_number,
                 'photo' => $photo,
                 'company_name' => $request->company_name,
@@ -134,7 +135,7 @@ class AuthController extends Controller
                 'commercial_record' => $com,
             ]);
 
-            return response()->json(['user'=>$data]);
+            return response()->json($data);
         }
         else
             return response()->json(['message'=>'not found']);
@@ -217,26 +218,26 @@ class AuthController extends Controller
     {
         if ($request->user()->tokenCan('admin')) {
             $id=auth()->id();
-            $data=Admin::query()->find($id);
 
-
-            $a=$request->validate([
-                'photo'=>['image'],
-                'username' => ['unique:users','nullable',Rule::unique('admins')->ignore($id),'unique:company_requests', 'unique:companies', 'max:191', 'string'],
+            $request->validate([
+                'photo'=>['image','nullable'],
+                'username' => [
+                    'nullable',Rule::unique('admins')->ignore($id),'string',
+                    'unique:company_requests', 'unique:companies', 'max:191','unique:users'],
                 'phone_number' => [
-                    'digits_between:7,12', 'unique:users','nullable',
-                    Rule::unique('admins')->ignore($id),'unique:company_requests', 'unique:companies'],
-                'password' => [Password::min(8)],
+                    'digits_between:7,12',Rule::unique('admins')->ignore($id),'nullable',
+                    'unique:users','unique:company_requests', 'unique:companies'],
+                'password' => [Password::min(8),'nullable'],
 
             ]);
-            if ($a){
+
 
             if($request->photo) {
             $file= $request->file('photo');
             $filename=Str::random(40).$file->getClientOriginalName();
             $file-> move(public_path('public/Image'), $filename);
             }
-
+            $data=Admin::query()->find($id);
             $data->username= $request->username ?? $data->username;
             $data->phone_number= $request->phone_number ?? $data->phone_number;
             $data->photo= $photo ?? $data->photo;
@@ -245,9 +246,7 @@ class AuthController extends Controller
 
             $data=Admin::query()->find($id);
                 return response()->json(['message'=>'info updated','user'=>$data]);
-            }
-            else
-                return response()->json(['message'=>'incorrect information']);
+
         }
 
             return response()->json(['message'=>'access denied']);
@@ -258,37 +257,34 @@ class AuthController extends Controller
     public function edit_user(Request $request)
     {
         if ($request->user()->tokenCan('user')) {
+            $id=auth()->id();
 
-            $id=Auth::id();
-
-            $aa=$request->validate([
-                'photo'=>['image'],
-                'username' => ['unique:users','unique:admins','unique:company_requests', 'unique:companies', 'max:191', 'string'],
-                'phone_number' => ['digits_between:7,12','unique:users','unique:company_requests', 'unique:admins', 'unique:companies'],
-                'password' => [Password::min(8)],
+            $request->validate([
+                'photo'=>['image','nullable'],
+                'username' => [
+                    'nullable',Rule::unique('users')->ignore($id),'string',
+                    'unique:company_requests', 'unique:companies', 'max:191','unique:admins'],
+                'phone_number' => [
+                    'digits_between:7,12',Rule::unique('users')->ignore($id),'nullable',
+                    'unique:admins','unique:company_requests', 'unique:companies'],
+                'password' => [Password::min(8),'nullable'],
 
             ]);
-            if($request->photo){
+
+            if($request->photo) {
                 $file= $request->file('photo');
                 $filename=Str::random(40).$file->getClientOriginalName();
                 $file-> move(public_path('public/Image'), $filename);
-                $photo= $filename;}
-            if ($request->password){
-                $pass=Hash::make($request['password']);
             }
+            $data=User::query()->find($id);
+            $data->username= $request->username ?? $data->username;
+            $data->phone_number= $request->phone_number ?? $data->phone_number;
+            $data->photo= $photo ?? $data->photo;
+            $data->password=Hash::make($request->password) ?? $data->password;
+            $data->save();
 
-            if ($aa){
-                $data=User::query()->find($id);
-                $data->username= $request->username ?? $data->username;
-                $data->phone_number= $request->phone_number ?? $data->phone_number;
-                $data->photo= $photo ?? $data->photo;
-                $data->password= $pass ?? $data->password;
-                $data->save();
-                $data=User::query()->find($id);
-                return response()->json(['message'=>'info updated','user'=>$data]);
-            }
-            else
-                return response()->json(['message'=>'incorrect information']);
+            $data=User::query()->find($id);
+            return response()->json(['message'=>'info updated','user'=>$data]);
         }
         return response()->json(['message'=>'access denied']);
     }
@@ -302,16 +298,16 @@ class AuthController extends Controller
 
             $id = Auth::id();
 
-                $aa = $request->validate([
-                    'photo' => ['image'],
-                    'username' => ['unique:users', 'unique:admins', 'unique:company_requests', 'unique:companies', 'max:191', 'string'],
-                    'phone_number' => ['digits_between:7,12', 'unique:users', 'unique:company_requests', 'unique:admins', 'unique:companies'],
+                $request->validate([
+                    'username' => ['unique:users', 'unique:admins', 'unique:company_requests',
+                        Rule::unique('companies')->ignore($id), 'max:191', 'string','nullable'],
+                    'phone_number' => ['digits_between:7,12', 'unique:users', 'unique:company_requests',
+                        'unique:admins',Rule::unique('companies')->ignore($id),'nullable'],
                     'password' => [Password::min(8)],
-                    'company_name' => ['unique:company_requests', 'unique:companies', 'max:191', 'string'],
-                    'company_email' => ['email', 'unique:companies', 'max:191'],
-                    'company_address' => ['string'],
-
-
+                    'company_name' => ['unique:company_requests',Rule::unique('companies')->ignore($id), 'max:191', 'string','nullable'],
+                    'company_email' => ['email', Rule::unique('companies')->ignore($id), 'max:191','nullable'],
+                    'company_address' => ['string','nullable'],
+                    'photo' => ['image','nullable'],
                 ]);
                 if ($request->photo) {
                     $file = $request->file('photo');
@@ -319,11 +315,8 @@ class AuthController extends Controller
                     $file->move(public_path('public/Image'), $filename);
                     $photo = $filename;
                 }
-                if ($request->password) {
-                    $pass = Hash::make($request['password']);
-                }
 
-                if ($aa) {
+
                     $table=Table::query()->where('company_id',$id);
                     if ($table->exists()){
                         $table1=$table->get();
@@ -341,14 +334,11 @@ class AuthController extends Controller
                     $data->company_email = $request->company_email ?? $data->company_email;
                     $data->company_address = $request->company_address ?? $data->company_address;
                     $data->photo = $photo ?? $data->photo;
-                    $data->password = $pass ?? $data->password;
+                    $data->password =Hash::make($request['password']) ?? $data->password;
                     $data->save();
                     $data = Company::query()->find($id);
                     return response()->json(['message' => 'info updated', 'user' => $data]);
-                }
-                else
-                    return response()->json(['message'=>'incorrect information']);
-        }
+                 }
         return response()->json(['message'=>'access denied']);
     }
 

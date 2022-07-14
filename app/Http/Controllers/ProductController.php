@@ -1,9 +1,7 @@
 <?php
-
-
 namespace App\Http\Controllers;
 
-use App\Models\{Invite, Product, Table, User};
+use App\Models\{Invite, Product, ProductLike, Table, User};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -15,30 +13,46 @@ class ProductController
     public function show_managers($id)
     {
         if (Table::query()->find($id))
-        {if (Invite::query()->where('table_id',$id)->exists()){
+        {
+            if (Invite::query()->where('table_id',$id)->exists()){
             $man=Invite::query()->where('table_id',$id)->get();
             foreach ($man as $item) {
-                $data[]=User::query()->find($item->user_id);
-
-            }
+                $data[]=User::query()->find($item->user_id);}
             return response()->json(['message'=>$data]);
         }else
             return response()->json(['message'=>[]]);
-
-
         }
         else
             return response()->json(['message'=>[]]);
-
     }
     //-----------------------------------show products by table id------------------------------------------------------------------------------------------
 
 
-    public function show($id)
+    public function show(Request $request,$id)
     {
-        if( Product::without(['table'])->where('table_id',$id)->exists())
-            return response()->json(['message' => Product::without(['table'])->where('table_id',$id)->get()]);
-        return response()->json(['message'=>[]]);
+        if( Product::without(['table'])->where('table_id',$id)->exists()){
+            $product=Product::without(['table'])->where('table_id',$id)->get();
+            if ($request->user()->tokenCan('user')){
+            foreach ($product as $item) {
+                if (ProductLike::query()->where(['product_id'=>$item->id,'user_id'=>auth()->id()])->exists()){
+                    $item->like_status=true;}
+                else
+                    $item->like_status=false;
+                  }
+            }
+            elseif ($request->user()->tokenCan('company')){
+                foreach ($product as $item) {
+                    if (ProductLike::query()->where(['product_id'=>$item->id,'company_id'=>auth()->id()])->exists()){
+                        $item->like_status=true;}
+                    else
+                        $item->like_status=false;
+                }
+
+            }
+            return response()->json(['message' =>$product ]);
+        }
+        else
+            return response()->json(['message'=>[]]);
     }
     //-----------------------------------add products------------------------------------------------------------------------------------------------------
 

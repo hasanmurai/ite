@@ -39,5 +39,9 @@ class Exhibition extends Model
     {
         return $this->hasMany(Pavilion::class, 'exhibition_id');
     }
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class, 'exhibition_id');
+    }
 
 }

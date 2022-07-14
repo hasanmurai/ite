@@ -3,6 +3,7 @@
 use App\Http\Controllers\{AuthController,
     CompanyRequestController,
     ExhibitionController,
+    FavoriteController,
     InviteController,
     ProductController,
     ProductLikeController,
@@ -34,10 +35,10 @@ Route::get('/image/{file}',[AuthController::class,'image']);
     Route::post('/login', [AuthController::class, 'login']);
 
     Route::prefix('show')->group(function() {
-        Route::get('/exhibitions', [ExhibitionController::class, 'show_exh']);
-        Route::get('/pavilions/{id}', [ExhibitionController::class, 'show_pav']);
-        Route::get('/user/pavilions/{id}', [ExhibitionController::class, 'show_user_pav']);
-        Route::get('/products/{id}', [ProductController::class, 'show']);
+        //Route::get('/products/{id}', [ProductController::class, 'show']);
+//        Route::get('/pavilions/{id}', [ExhibitionController::class, 'show_pav']);
+//        Route::get('/user/pavilions/{id}', [ExhibitionController::class, 'show_user_pav']);
+
         Route::get('/managers/{id}', [ProductController::class, 'show_managers']);
     });
 
@@ -45,6 +46,10 @@ Route::get('/image/{file}',[AuthController::class,'image']);
     Route::middleware(['auth:api,admin-api,company-api'])->group(function() {
 
         Route::prefix('show')->group(function() {
+            Route::get('/exhibitions', [ExhibitionController::class, 'show_exh']);
+            Route::get('/pavilions/{id}', [ExhibitionController::class, 'show_pav']);
+            Route::get('/user/pavilions/{id}', [ExhibitionController::class, 'show_user_pav']);
+            Route::get('/products/{id}', [ProductController::class, 'show']);
             Route::get('/request', [CompanyRequestController::class, 'show_request']);
             Route::get('/register', [RegisterRequestController::class, 'show_register']);
             Route::get('/my_exhibitions', [ExhibitionController::class, 'show_my_exh']);
@@ -78,6 +83,12 @@ Route::get('/image/{file}',[AuthController::class,'image']);
             Route::get('/accept/{id}', [CompanyRequestController::class, 'accept']);
             Route::get('/reject/{id}', [CompanyRequestController::class, 'reject']);
             Route::delete('/delete/{id}', [CompanyRequestController::class, 'delete']);
+        });
+        Route::prefix('favorite')->group(function() {
+            Route::get('exhibition/{id}', [FavoriteController::class, 'favorite_exh']);
+            Route::get('table/{id}', [FavoriteController::class, 'favorite_tab']);
+            Route::get('show/exhibition', [FavoriteController::class, 'show_favorite_exh']);
+            Route::get('show/table', [FavoriteController::class, 'show_favorite_tab']);
         });
 
         Route::get('/like/{id}', [ProductLikeController::class, 'like']);

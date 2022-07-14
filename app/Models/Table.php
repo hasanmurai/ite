@@ -34,6 +34,8 @@ class Table extends Model
 
     public function invites(){
         return $this->hasMany(Invite::class,'table_id');}
+    public function favorites(){
+        return $this->hasMany(Favorite::class,'table_id');}
 
     public function pavilion()
     {

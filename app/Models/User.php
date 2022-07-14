@@ -46,6 +46,8 @@ protected $guard='api';
     ];
     public function invites(){
         return $this->hasMany(Invite::class,'user_id');
+    }    public function favorites(){
+        return $this->hasMany(Favorite::class,'user_id');
     }
    public function productlikes(){
         return $this->hasMany(ProductLike::class,'user_id');}

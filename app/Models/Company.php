@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 use Illuminate\Notifications\Notifiable;
@@ -55,10 +53,18 @@ class Company extends Authenticatable
     public function tables()
     {
         return $this->hasMany(Table::class,'company_id');
-    } public function productlikes()
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class,'company_id');
+    }
+
+    public function productlikes()
     {
         return $this->hasMany(ProductLike::class,'company_id');
     }
+
     public function register_requests()
     {
         return $this->hasMany(RegisterRequest::class,'company_id');

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Exhibition, Pavilion, Product, ProductLike, Table};
+use App\Models\{Exhibition, Favorite, Pavilion, ProductLike, Table};
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -12,15 +12,29 @@ class ExhibitionController extends Controller
 
     //---------------------------------show exhibitions--------------------------------------------------------------------------------------------------
 
-      public function show_exh()
+      public function show_exh(Request $request)
       {
-          $data=Exhibition::all();
+          $data=Exhibition::query()->without('admin')->get();
           foreach ($data as $item) {
 
               $start=Carbon::parse($item->exhibition_start);
               if($start <= now()){$item->status='0n';$item->save();}
               if($start> now()){$item->status='pre';$item->save();}
-              $end=Carbon::parse($item->exhibition_end);
+              if ($request->user()->tokenCan('user')){
+                  if (Favorite::query()->where(['exhibition_id'=>$item->id,'user_id'=>auth()->id()])->exists())
+                  {
+                      $item->favorite=true;
+                  }else
+                      $item->favorite=false;
+              }if ($request->user()->tokenCan('company')){
+                  if (Favorite::query()->where(['exhibition_id'=>$item->id,'company_id'=>auth()->id()])->exists())
+                  {
+                      $item->favorite=true;
+                  }else
+                      $item->favorite=false;
+              }
+
+                  $end=Carbon::parse($item->exhibition_end);
               $end->day=$end->day+1;
               if ($end<now()){
 
@@ -42,8 +56,7 @@ class ExhibitionController extends Controller
                   $item->delete();
               }
           }
-
-         return response()->json(['message'=> Exhibition::query()->without('admin')->get()]);
+         return response()->json(['message'=> $data]);
       }
     //---------------------------------show my exhibitions--------------------------------------------------------------------------------------------------
 
@@ -64,7 +77,7 @@ class ExhibitionController extends Controller
 
     //---------------------------------show pavilions----------------------------------------------------------------------------------------------------
 
-    public function show_pav($id)
+    public function show_pav(Request $request,$id)
     {
         if ( Exhibition::query()->where('id',$id)->exists()) {
             $data = Exhibition::query()->find($id);
@@ -72,7 +85,19 @@ class ExhibitionController extends Controller
             $i = 0;
             foreach ($data as $item) {
                 $table = Pavilion::query()->find($item->id);
-                $tables[] =['pavilion'=>$item,'table'=>$table->tables()->without('pavilion','company')->get()];
+                $a=$table->tables()->without('pavilion','company')->get();
+
+
+                foreach ($a as $table) {
+
+
+                if ($request->user()->tokenCan('company')) {
+                    if (Favorite::query()->where(['table_id' => $table->id, 'company_id' => auth()->id()])->exists()) {
+                        $table->favorite = true;
+                    } else
+                        $table->favorite = false;
+                }}
+                $tables[] =['pavilion'=>$item,'table'=>$a];
                 ++$i;
             }
             if (!$i == 0)
@@ -95,17 +120,21 @@ class ExhibitionController extends Controller
             $i = 0;
 
             foreach ($data as $item) {
-               // $table = Pavilion::query()->find($item->id);
+                $data1=null;
                 $data=$item->tables()->without('pavilion','company')->get();
                 foreach ( $data as $item1) {
                     if (!$item1->company_id==null){
                         $data1[]=$item1;
+                        if (Favorite::query()->where(['table_id'=>$item->id,'user_id'=>auth()->id()])->exists())
+                        {
+                            $item1->favorite=true;
+                        }else
+                            $item1->favorite=false;
                     }
                 }
-                if ($data1)
+                if (!$data1==null){
                 $tables[] =['pavilion'=>$item,'table'=>$data1];
-                ++$i;
-                $data1=null;
+                ++$i;}
             }
             if (!$i == 0)
                 return response()->json(['message'=>$tables]);
