@@ -54,6 +54,15 @@ class ProductController
         else
             return response()->json(['message'=>[]]);
     }
+    public function visitor_show($id)
+    {
+        if( Product::without(['table'])->where('table_id',$id)->exists()){
+            $product=Product::without(['table'])->where('table_id',$id)->get();
+            return response()->json(['message' =>$product ]);
+        }
+        else
+            return response()->json(['message'=>[]]);
+    }
     //-----------------------------------add products------------------------------------------------------------------------------------------------------
 
     public function add_product(Request $request, $id)
