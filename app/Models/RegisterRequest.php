@@ -16,7 +16,8 @@ class RegisterRequest extends Model
         'company_name',
         'company_email',
         'phone_number',
-        'commercial_record'
+        'commercial_record',
+        'photo'
     ];
     protected $primaryKey = "id";
     public $timestamps = true;

@@ -61,6 +61,7 @@ class RegisterRequestController extends Controller
                             'company_email' => $com->company_email,
                             'phone_number' => $com->phone_number,
                             'commercial_record' => $com->commercial_record,
+                            'photo'=>$com->photo
 
                         ]);
 
@@ -102,6 +103,7 @@ class RegisterRequestController extends Controller
                             $table->company_email = $data->company_email;
                             $table->phone_number = $data->phone_number;
                             $table->commercial_record = $data->commercial_record;
+                            $table->photo=$data->photo;
                             $table->save();
                             RegisterRequest::where('table_id', $req)->delete();
 

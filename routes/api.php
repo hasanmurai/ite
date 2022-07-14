@@ -21,10 +21,10 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
 Route::get('/image/{file}',[AuthController::class,'image']);
-
-    Route::post('/search',[InviteController::class,'search']);
+Route::post('/search',[InviteController::class,'search']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('show/managers/{id}', [ProductController::class, 'show_managers']);
 
     Route::prefix('signup')->group(function() {
         Route::post('/admin', [AuthController::class, 'admin']);
@@ -32,14 +32,10 @@ Route::get('/image/{file}',[AuthController::class,'image']);
         Route::post('/company', [AuthController::class, 'company']);
     });
 
-    Route::post('/login', [AuthController::class, 'login']);
-
-    Route::prefix('show')->group(function() {
-        //Route::get('/products/{id}', [ProductController::class, 'show']);
-//        Route::get('/pavilions/{id}', [ExhibitionController::class, 'show_pav']);
-//        Route::get('/user/pavilions/{id}', [ExhibitionController::class, 'show_user_pav']);
-
-        Route::get('/managers/{id}', [ProductController::class, 'show_managers']);
+    Route::prefix('visitor/show')->group(function() {
+        Route::get('/products/{id}', [ProductController::class, 'show']);
+        Route::get('/pavilions/{id}', [ExhibitionController::class, 'show_pav']);
+        Route::get('/user/pavilions/{id}', [ExhibitionController::class, 'show_user_pav']);
     });
 
 

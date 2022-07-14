@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('company_email');
             $table->text('phone_number');
             $table->text('commercial_record');
+            $table->text('photo');
             $table->timestamps();
         });
     }

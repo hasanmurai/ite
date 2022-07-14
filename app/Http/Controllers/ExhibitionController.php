@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Exhibition, Favorite, Pavilion, ProductLike, Table};
+use App\Models\{Company, Exhibition, Favorite, Pavilion, ProductLike, Table};
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -15,8 +15,8 @@ class ExhibitionController extends Controller
       public function show_exh(Request $request)
       {
           $data=Exhibition::query()->without('admin')->get();
-          foreach ($data as $item) {
 
+          foreach ($data as $item) {
               $start=Carbon::parse($item->exhibition_start);
               if($start <= now()){$item->status='0n';$item->save();}
               if($start> now()){$item->status='pre';$item->save();}
@@ -24,20 +24,21 @@ class ExhibitionController extends Controller
                   if (Favorite::query()->where(['exhibition_id'=>$item->id,'user_id'=>auth()->id()])->exists())
                   {
                       $item->favorite=true;
-                  }else
+                  }
+                  else
                       $item->favorite=false;
-              }if ($request->user()->tokenCan('company')){
+              }
+              if ($request->user()->tokenCan('company')){
                   if (Favorite::query()->where(['exhibition_id'=>$item->id,'company_id'=>auth()->id()])->exists())
                   {
                       $item->favorite=true;
-                  }else
+                  }
+                  else
                       $item->favorite=false;
               }
-
-                  $end=Carbon::parse($item->exhibition_end);
+              $end=Carbon::parse($item->exhibition_end);
               $end->day=$end->day+1;
               if ($end<now()){
-
                   $pav=$item->pavilions()->get();
                   foreach ($pav as $item1) {
                       $tab=Table::query()->where('pavilion_id',$item1->id)->get();
@@ -79,7 +80,9 @@ class ExhibitionController extends Controller
 
     public function show_pav(Request $request,$id)
     {
-        if ( Exhibition::query()->where('id',$id)->exists()) {
+        if ($request->user()->tokenCan('admin')||$request->user()->tokenCan('company')){
+
+            if ( Exhibition::query()->where('id',$id)->exists()) {
             $data = Exhibition::query()->find($id);
             $data = $data->pavilions()->without('exhibition')->get();
             $i = 0;
@@ -87,16 +90,16 @@ class ExhibitionController extends Controller
                 $table = Pavilion::query()->find($item->id);
                 $a=$table->tables()->without('pavilion','company')->get();
 
-
                 foreach ($a as $table) {
-
 
                 if ($request->user()->tokenCan('company')) {
                     if (Favorite::query()->where(['table_id' => $table->id, 'company_id' => auth()->id()])->exists()) {
                         $table->favorite = true;
                     } else
                         $table->favorite = false;
-                }}
+                   }
+                }
+
                 $tables[] =['pavilion'=>$item,'table'=>$a];
                 ++$i;
             }
@@ -107,13 +110,17 @@ class ExhibitionController extends Controller
                 return response()->json(['message' => []]);
         }
         else
-            return response()->json(['message' => 'exhibition not found']);
+            return response()->json(['message' => 'exhibition not found']); }
+
+        else
+            return response()->json(['message' => 'access denied ']);
 
     }
     //---------------------------------show pavilions for user-----------------------------------------------------------------------------------------------
 
-    public function show_user_pav($id)
+    public function show_user_pav(Request $request,$id)
     {
+        if ($request->user()->tokenCan('user')){
         if ( Exhibition::query()->where('id',$id)->exists()) {
             $data = Exhibition::query()->find($id);
             $data = $data->pavilions()->without('exhibition')->get();
@@ -125,7 +132,7 @@ class ExhibitionController extends Controller
                 foreach ( $data as $item1) {
                     if (!$item1->company_id==null){
                         $data1[]=$item1;
-                        if (Favorite::query()->where(['table_id'=>$item->id,'user_id'=>auth()->id()])->exists())
+                        if (Favorite::query()->where(['table_id'=>$item1->id,'user_id'=>auth()->id()])->exists())
                         {
                             $item1->favorite=true;
                         }else
@@ -144,6 +151,11 @@ class ExhibitionController extends Controller
         }
         else
             return response()->json(['message' => 'exhibition not found']);
+
+        }
+        else
+            return response()->json(['message' => 'access denied']);
+
     }
 
     //---------------------------------add exhibition----------------------------------------------------------------------------------------------------

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('company_email')->nullable();
             $table->text('phone_number')->nullable();
             $table->text('commercial_record')->nullable();
+            $table->text('photo')->nullable();
             $table->timestamps();
         });
     }

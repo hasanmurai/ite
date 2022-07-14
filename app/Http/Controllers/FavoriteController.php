@@ -11,37 +11,44 @@ class FavoriteController extends Controller
     {
         if ($request->user()->tokenCan('user')){
             if (Exhibition::query()->where('id',$id)->exists()){
-            if (Favorite::query()->where(['exhibition_id'=>$id,'user_id'=>auth()->id()])->exists())
-            {
-                Favorite::query()->where(['exhibition_id'=>$id,'user_id'=>auth()->id()])->delete();
-                return response()->json(['message'=>'removed from favorite','status'=>false]);
+                if (Favorite::query()->where(['exhibition_id'=>$id,'user_id'=>auth()->id()])->exists())
+                {
+                    Favorite::query()->where(['exhibition_id'=>$id,'user_id'=>auth()->id()])->delete();
+                    return response()->json(['message'=>'removed from favorite','status'=>false]);
+                }
+                else{
+                    Favorite::query()->create([
+                        'exhibition_id'=>$id,
+                        'user_id'=>auth()->id()
+                    ]);
+                return response()->json(['message'=>'added to favorite','status'=>true]);
+                }
             }
             else
-                Favorite::query()->create([
-                    'exhibition_id'=>$id,
-                    'user_id'=>auth()->id()
-                ]);
-            return response()->json(['message'=>'added to favorite','status'=>true]);
+                return response()->json(['message'=>'exhibition not found']);
         }
         elseif ($request->user()->tokenCan('company')){
-            if (Favorite::query()->where(['exhibition_id'=>$id,'company_id'=>auth()->id()])->exists())
-            {
-                Favorite::query()->where(['exhibition_id'=>$id,'company_id'=>auth()->id()])->delete();
-                return response()->json(['message'=>'removed from favorite','status'=>false]);
+            if (Exhibition::query()->where('id',$id)->exists()){
+                if (Favorite::query()->where(['exhibition_id'=>$id,'company_id'=>auth()->id()])->exists())
+                {
+                    Favorite::query()->where(['exhibition_id'=>$id,'company_id'=>auth()->id()])->delete();
+                    return response()->json(['message'=>'removed from favorite','status'=>false]);
+                }
+                else
+                    Favorite::query()->create([
+                        'exhibition_id'=>$id,
+                        'company_id'=>auth()->id()
+                    ]);
+                return response()->json(['message'=>'added to favorite','status'=>true]);
             }
             else
-                Favorite::query()->create([
-                    'exhibition_id'=>$id,
-                    'company_id'=>auth()->id()
-                ]);
-            return response()->json(['message'=>'added to favorite','status'=>true]);
-        }
-        else
-            return response()->json(['message'=>'exhibition not found ']);
+                return response()->json(['message'=>'exhibition not found ']);
         }
         else
             return response()->json(['message'=>'access denied']);
     }
+
+
     public function favorite_tab(Request $request,$id)
     {
         if ($request->user()->tokenCan('user')){
@@ -58,23 +65,34 @@ class FavoriteController extends Controller
                     'user_id'=>auth()->id()
                 ]);
             return response()->json(['message'=>'added to favorite','status'=>true]);
-        }
-        elseif ($request->user()->tokenCan('company')){
-            if (Favorite::query()->where(['table_id'=>$id,'company_id'=>auth()->id()])->exists())
-            {
-                Favorite::query()->where(['table_id'=>$id,'company_id'=>auth()->id()])->delete();
-                return response()->json(['message'=>'removed from favorite','status'=>false]);
             }
             else
-                Favorite::query()->create([
-                    'table_id'=>$id,
-                    'company_id'=>auth()->id()
-                ]);
-            return response()->json(['message'=>'added to favorite','status'=>true]);
-        }
-            else
                 return response()->json(['message'=>'table not found']);
-    }
+
+        }
+
+        elseif ($request->user()->tokenCan('company')){
+            if (Table::query()->where('id',$id)->exists()){
+                $tab=Table::query()->find($id);
+                if (!$tab->company_id==null){
+                    if (Favorite::query()->where(['table_id'=>$id,'company_id'=>auth()->id()])->exists())
+                    {
+                        Favorite::query()->where(['table_id'=>$id,'company_id'=>auth()->id()])->delete();
+                        return response()->json(['message'=>'removed from favorite','status'=>false]);
+                    }
+                    else
+                        Favorite::query()->create([
+                            'table_id'=>$id,
+                            'company_id'=>auth()->id()
+                        ]);
+                    return response()->json(['message'=>'added to favorite','status'=>true]);
+                }
+                else
+                    return response()->json(['message'=>'error']);
+            }
+                else
+                    return response()->json(['message'=>'table not found']);
+            }
         else
             return response()->json(['message'=>'access denied']);
     }
