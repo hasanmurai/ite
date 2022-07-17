@@ -47,7 +47,6 @@ class ProductController
                     else
                         $item->like_status=false;
                 }
-
             }
             return response()->json(['message' =>$product ]);
         }
@@ -174,9 +173,6 @@ class ProductController
         else
             return response()->json(['message'=>'product not found']);
     }
-
-
-
 
     //-----------------------------------delete products----------------------------------------------------------------------------------------------------
 

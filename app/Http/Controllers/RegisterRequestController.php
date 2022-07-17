@@ -14,7 +14,7 @@ class RegisterRequestController extends Controller
     {
         if ($request->user()->tokenCan('admin')) {
 
-            $i = 0;
+            $req = [];
             $exh = Exhibition::where('admin_id', auth()->id())->get();
             foreach ($exh as $item) {
 
@@ -25,20 +25,15 @@ class RegisterRequestController extends Controller
                     foreach ($tab as $item2) {
 
                         if (RegisterRequest::where('table_id', $item2->id)->exists()) {
-                            $i = $i + 1;
                             $req[] = RegisterRequest::without(['company', 'table'])->where('table_id', $item2->id)->get()->first();
                         }
-
                     }
-
                 }
-
             }
-            if (!$i == 0)
                 return response()->json(['message' => $req]);
-            else
-                return response()->json(['message' => []]);
-        } else
+
+        }
+        else
             return response()->json(['message' => 'access denies']);
     }
 
@@ -51,8 +46,6 @@ class RegisterRequestController extends Controller
                     $table = Table::query()->find($id);
                     if (RegisterRequest::query()->where(['table_id' => $table->id, 'company_id' => auth()->id()])->doesntExist()) {
                         $com = Company::query()->find(auth()->id());
-
-
                         $data = RegisterRequest::create([
                             'company_id' => auth()->id(),
                             'table_id' => $id,
@@ -64,7 +57,6 @@ class RegisterRequestController extends Controller
                             'photo'=>$com->photo
 
                         ]);
-
                         return response()->json(['message' => 'request send successfully', 'table' => $data]);
                     } else
                         return response()->json(['message' => 'request already exists']);
@@ -91,10 +83,7 @@ class RegisterRequestController extends Controller
 
                 if (auth()->id() == $adm) {
                     if ($data1->find($req)->company_id == null) {
-
-
                         if ($data1->where(['pavilion_id' => $pav, 'company_id' => $data->find($id)->company_id])->doesntExist()) {
-
                             $data = $data->find($id);
 
                             $table = Table::query()->find($req);

@@ -101,31 +101,23 @@ class FavoriteController extends Controller
     {
         if ($request->user()->tokenCan('user')){
             $fav=Favorite::query()->where('user_id',auth()->id())->get();
-            $i=0;
+            $exh=[];
             foreach ($fav as $item) {
                 if (Exhibition::query()->where('id',$item->exhibition_id)->exists()){
                     $exh[]=Exhibition::query()->without('admin')->find($item->exhibition_id );
-                $i++;}
+                }
             }
-            if (!$i==0)
             return response()->json(['message'=>$exh]);
-            else
-            return response()->json(['message'=>[]]);
         }
         elseif($request->user()->tokenCan('company')){
             $fav=Favorite::query()->where('company_id',auth()->id())->get();
-            $i=0;
+            $exh=[];
             foreach ($fav as $item) {
                 if (Exhibition::query()->where('id',$item->exhibition_id)->exists()){
-                $exh[]=Exhibition::query()->without('admin')->find($item->exhibition_id);
-            ++$i;
+                    $exh[]=Exhibition::query()->without('admin')->find($item->exhibition_id);
                 }
             }
-            if (!$i==0)
                 return response()->json(['message'=>$exh]);
-            else
-                return response()->json(['message'=>[]]);
-
         }
         else
             return response()->json(['message'=>'access denied']);
@@ -135,33 +127,28 @@ class FavoriteController extends Controller
     {
         if ($request->user()->tokenCan('user')){
             $fav=Favorite::query()->where('user_id',auth()->id())->get();
-            $i=0;
+            $tab=[];
             foreach ($fav as $item) {
                 if (Table::query()->where('id',$item->table_id)->exists()){
 
-                    $tab[]=Table::query()->without('pavilion','company')->find($item->table_id);++$i;
+                    $tab[]=Table::query()->without('pavilion','company')->find($item->table_id);
                 }
             }
-            if (!$i==0)
                 return response()->json(['message'=>$tab]);
-            else
-                return response()->json(['message'=>[]]);
         }
 
         elseif($request->user()->tokenCan('company')){
             $fav=Favorite::query()->where('company_id',auth()->id())->get();
-            $i=0;
+            $tab=[];
             foreach ($fav as $item) {
                 if (Table::query()->where('id',$item->table_id)->exists()){
-                    $tab[]=Table::query()->without('pavilion','company')->find($item->table_id);$i++;
-            }}
-            if (!$i==0)
+                    $tab[]=Table::query()->without('pavilion','company')->find($item->table_id);
+                }
+            }
                 return response()->json(['message'=>$tab]);
-            else
-                return response()->json(['message'=>[]]);        }
+        }
         else
             return response()->json(['message'=>'access denied']);
     }
-
 }
 

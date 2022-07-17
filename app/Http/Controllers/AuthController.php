@@ -21,16 +21,15 @@ class AuthController extends Controller
             'email'=>['required','email','unique:users','unique:admins','unique:company_requests','unique:companies','max:191'],
             'password'=>['required',Password::min(8)],
             'phone_number'=>['required','unique:users','unique:admins','unique:company_requests','unique:companies','digits_between:7,12'],
-            'photo'=>['required','image'],
+            //'photo'=>['required','image'],
 
         ]);
           if($a) {
-
               if ($request->verification_code == 'abc') {
-                  $file = $request->file('photo');
-                  $filename =Str::random(40).$file->getClientOriginalName();
-                  $file->move(public_path('public/Image'),$filename);
-                  $photo = $filename;
+//                  $file = $request->file('photo');
+//                  $filename =Str::random(40).$file->getClientOriginalName();
+//                  $file->move(public_path('public/Image'),$filename);
+//                  $photo = $filename;
 
 
                   $data = Admin::query()->create([
@@ -38,8 +37,7 @@ class AuthController extends Controller
                       'email' => $request->email,
                       'password' => Hash::make($request['password']),
                       'phone_number' => $request->phone_number,
-                      'photo' => $photo,
-
+//                      'photo' => $photo,
 
                   ]);
                   $accessToken = $data->createToken('Personal Access Token',['admin'])->accessToken;
@@ -65,20 +63,20 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'unique:users', 'unique:admins','unique:company_requests', 'unique:companies', 'max:191'],
             'password' => ['required',Password::min(8)],
             'phone_number' => ['required', 'unique:users', 'unique:admins','unique:company_requests', 'unique:companies', 'digits_between:7,12'],
-            'photo' => ['required','image'],
+            //'photo' => ['required','image'],
 
         ]);
 
-            $file= $request->file('photo');
-            $filename=Str::random(40).$file->getClientOriginalName();
-            $file-> move(public_path('public/Image'), $filename);
-            $photo= $filename;
+//            $file= $request->file('photo');
+//            $filename=Str::random(40).$file->getClientOriginalName();
+//            $file-> move(public_path('public/Image'), $filename);
+//            $photo= $filename;
             $user = User::query()->create([
                 'username' => $request->username,
                 'email' => $request->email,
                 'password' => Hash::make($request['password']),
                 'phone_number' => $request->phone_number,
-                'photo' => $photo,
+                //'photo' => $photo,
 
             ]);
         $accessToken = $user->createToken('Personal Access Token',['user'])->accessToken;
@@ -345,6 +343,9 @@ class AuthController extends Controller
     public function image($file)
     {
         $data=public_path().'/public/Image/'.$file;
+        if(file_exists($data))
         return response()->file($data);
+   else
+       return response()->json('not found');
     }
 }

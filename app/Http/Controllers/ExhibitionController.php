@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Company, Exhibition, Favorite, Pavilion, ProductLike, Table};
+use App\Models\{ Exhibition, Favorite, Pavilion, ProductLike, Table};
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -119,7 +119,7 @@ class ExhibitionController extends Controller
             if ( Exhibition::query()->where('id',$id)->exists()) {
             $data = Exhibition::query()->find($id);
             $data = $data->pavilions()->without('exhibition')->get();
-            $i = 0;
+            $tables=[];
             foreach ($data as $item) {
                 $table = Pavilion::query()->find($item->id);
                 $a=$table->tables()->without('pavilion','company')->get();
@@ -133,16 +133,10 @@ class ExhibitionController extends Controller
                         $table->favorite = false;
                    }
                 }
-
                 $tables[] =['pavilion'=>$item,'table'=>$a];
-                ++$i;
             }
-            if (!$i == 0)
                 return response()->json(['message'=>$tables]);
-
-            else
-                return response()->json(['message' => []]);
-        }
+            }
         else
             return response()->json(['message' => 'exhibition not found']); }
 
@@ -157,33 +151,27 @@ class ExhibitionController extends Controller
         if ( Exhibition::query()->where('id',$id)->exists()) {
             $data = Exhibition::query()->find($id);
             $data = $data->pavilions()->without('exhibition')->get();
-            $i = 0;
 
+            $tables=[];
             foreach ($data as $item) {
-                $data1=null;
                 $data=$item->tables()->without('pavilion','company')->get();
                 foreach ( $data as $item1) {
                     if (!$item1->company_id==null){
                         $data1[]=$item1;
                         if ($request->user()->tokenCan('user')){
-
-                            if (Favorite::query()->where(['table_id'=>$item1->id,'user_id'=>auth()->id()])->exists())
-                        {
-                            $item1->favorite=true;
-                        }else
-                            $item1->favorite=false;
-                    }
+                            if (Favorite::query()->where(['table_id'=>$item1->id,'user_id'=>auth()->id()])->exists()) {
+                                $item1->favorite=true;
+                            }
+                            else
+                                $item1->favorite=false;
+                        }
                     }
                 }
-                if (!$data1==null){
-                $tables[] =['pavilion'=>$item,'table'=>$data1];
-                ++$i;}
+                if (isset($data1)){
+                    $tables[] =['pavilion'=>$item,'table'=>$data1];
+                }
             }
-            if (!$i == 0)
                 return response()->json(['message'=>$tables]);
-
-            else
-                return response()->json(['message' => []]);
         }
         else
             return response()->json(['message' => 'exhibition not found']);
@@ -194,26 +182,19 @@ class ExhibitionController extends Controller
         if ( Exhibition::query()->where('id',$id)->exists()) {
             $data = Exhibition::query()->find($id);
             $data = $data->pavilions()->without('exhibition')->get();
-            $i = 0;
-
+            $tables=[];
             foreach ($data as $item) {
-                $data1=null;
                 $data=$item->tables()->without('pavilion','company')->get();
                 foreach ( $data as $item1) {
                     if (!$item1->company_id==null){
                         $data1[]=$item1;
-
                     }
                 }
-                if (!$data1==null){
+                if (isset($data1)){
                 $tables[] =['pavilion'=>$item,'table'=>$data1];
-                ++$i;}
+                }
             }
-            if (!$i == 0)
                 return response()->json(['message'=>$tables]);
-
-            else
-                return response()->json(['message' => []]);
         }
         else
             return response()->json(['message' => 'exhibition not found']);
@@ -233,15 +214,12 @@ class ExhibitionController extends Controller
               'district'=>['required','string'],
               'city'=>['required','string'],
               'photo'=>['required','image'],
-
           ]);
-
           if($a){
               $file = $request->file('photo');
               $filename =Str::random(40).$file->getClientOriginalName();
               $file->move(public_path('public/Image'),$filename);
               $photo = $filename;
-
 
               $data=Exhibition::query()->create([
                   'admin_id'=>auth()->id(),

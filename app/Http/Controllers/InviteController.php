@@ -33,8 +33,6 @@ class InviteController extends Controller
                 'table_id'=>$table_id
             ]);
             return response()->json(['message'=>'invite send successfully']);
-
-
         }
             else
                 return response()->json(['message'=>'invite already exists']);
