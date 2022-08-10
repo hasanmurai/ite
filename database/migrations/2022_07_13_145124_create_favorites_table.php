@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('exhibition_id')->nullable();
             $table->foreignId('table_id')->nullable();
+            $table->foreignId('product_id')->nullable();
             $table->foreignId('user_id')->nullable();
             $table->foreignId('company_id')->nullable();
             $table->timestamps();

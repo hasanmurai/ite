@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\Invite;
 use App\Models\Table;
 use App\Models\User;
@@ -11,12 +12,18 @@ class InviteController extends Controller
 {
     public function search(Request $request){
         $request->validate(['username'=>['required','string']]);
-        if(User::query()->where('username',$request->username)->exists()){
-            $data=User::query()->where('username',$request->username)->get();
-            return response()->json(['message'=>$data]);
+        $data=User::all();
+        foreach ($data as $item){
+            if (str_contains($item->username,$request->username))
+            {
+                $data1[]=$item;
+            }
         }
+        if (isset($data1))
+            return response()->json(['message'=>$data1]);
         else
-            return response()->json(['message'=>[]]);
+            return response()->json(['message'=>'not found']);
+
     }
 
     public function invite(Request $request,$table_id,$user_id){
@@ -89,9 +96,15 @@ class InviteController extends Controller
     public function show_invites(Request $request){
         if ($request->user()->tokenCan('user'))
         {
+            $data=[];
             $invite=Invite::query()->without('table','company','user')->where('user_id',auth()->id())->get();
+            foreach ($invite as $item){
+                $com=Company::query()->find($item->company_id)->company_name;
+                $tab=Table::query()->without("pavilion",'company')->find($item->table_id)->table_number;
+                $data[]=['company_name'=>$com,'table_number'=>$tab];
+            }
 
-            return response()->json(['message'=>$invite]);
+            return response()->json(['message'=>$data]);
 }
         else
             return response()->json(['message'=>'access denied']);

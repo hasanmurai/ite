@@ -20,7 +20,6 @@ class Exhibition extends Model
         'district',
         'city',
         'status',
-        'photo'
     ];
     protected $primaryKey = "id";
     public $timestamps = true;

@@ -22,7 +22,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::get('/image/{file}',[AuthController::class,'image']);
-Route::post('/search',[InviteController::class,'search']);
+Route::post('/search/user',[InviteController::class,'search']);
+Route::post('/search/{name}', [ExhibitionController::class, 'search']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('show/managers/{id}', [ProductController::class, 'show_managers']);
 
@@ -35,7 +36,7 @@ Route::get('show/managers/{id}', [ProductController::class, 'show_managers']);
     Route::prefix('visitor/show')->group(function() {
         Route::get('/exhibitions', [ExhibitionController::class, 'visitor_exh']);
         Route::get('/products/{id}', [ProductController::class, 'visitor_show']);
-        Route::get('/user/pavilions/{id}', [ExhibitionController::class, 'visitor_show_user_pav']);
+        Route::get('/user/pavilions/{id}', [ExhibitionController::class, 'visitor_pav']);
     });
 
 
@@ -83,11 +84,14 @@ Route::get('show/managers/{id}', [ProductController::class, 'show_managers']);
         Route::prefix('favorite')->group(function() {
             Route::get('exhibition/{id}', [FavoriteController::class, 'favorite_exh']);
             Route::get('table/{id}', [FavoriteController::class, 'favorite_tab']);
-            Route::get('show/exhibition', [FavoriteController::class, 'show_favorite_exh']);
-            Route::get('show/table', [FavoriteController::class, 'show_favorite_tab']);
+            Route::prefix('show')->group(function() {
+            Route::get('exhibition', [FavoriteController::class, 'show_favorite_exh']);
+            Route::get('table', [FavoriteController::class, 'show_favorite_tab']);
+            Route::get('product', [FavoriteController::class, 'show_favorite_product']);
+        });
         });
 
-        Route::get('/like/{id}', [ProductLikeController::class, 'like']);
+        Route::get('/like/{id}', [ProductController::class, 'like']);
 
         Route::get('/logout', [AuthController::class, 'logout']);
 

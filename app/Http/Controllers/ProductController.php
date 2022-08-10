@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\{Invite, Product, ProductLike, Table, User};
+use App\Models\{Favorite, Invite, Product, ProductLike, Table, User};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -9,6 +9,64 @@ use Illuminate\Support\Str;
 class ProductController
 
 {
+    public function like(Request $request,$id)
+    {
+        if ($request->user()->tokenCan('user'))
+        {
+            if (Product::query()->where('id',$id)->exists()){
+                if (ProductLike::query()->where(['product_id'=>$id,'user_id'=>auth()->id()])->doesntExist()){
+                    ProductLike::query()->create([
+                        'user_id'=>auth()->id(),
+                        'product_id'=>$id
+                    ]);
+                    Product::query()->find($id)->increment('likes');
+
+                    Favorite::query()->create([
+                        'user_id'=>auth()->id(),
+                        'product_id'=>$id
+                    ]);
+
+                    return response()->json(['message'=>'like added','likes'=>Product::query()->find($id)->likes,'status'=>true]);
+                }
+                else{
+                    ProductLike::query()->where(['product_id'=>$id,'user_id'=>auth()->id()])->delete();
+                    Favorite::query()->where(['product_id'=>$id,'user_id'=>auth()->id()])->delete();
+                    Product::query()->find($id)->decrement('likes');
+
+                    return response()->json(['message'=>'like removed','likes'=>Product::query()->find($id)->likes,'status'=>false]);
+                }
+            } else
+                return response()->json(['message'=>'product not found']);
+        }
+        elseif ($request->user()->tokenCan('company')){
+            if (Product::query()->where('id',$id)->exists()){
+                if (ProductLike::query()->where(['product_id'=>$id,'company_id'=>auth()->id()])->doesntExist()){
+                    ProductLike::query()->create([
+                        'company_id'=>auth()->id(),
+                        'product_id'=>$id
+                    ]);
+                    Product::query()->find($id)->increment('likes');
+
+                    Favorite::query()->create([
+                        'company_id'=>auth()->id(),
+                        'product_id'=>$id
+                    ]);
+
+                    return response()->json(['message'=>'like added','likes'=>Product::query()->find($id)->likes,'status'=>true]);
+                }
+                else{
+                    ProductLike::query()->where(['product_id'=>$id,'company_id'=>auth()->id()])->delete();
+                    Product::query()->find($id)->decrement('likes');
+                    Favorite::query()->where(['product_id'=>$id,'company_id'=>auth()->id()])->delete();
+
+                    return response()->json(['message'=>'like removed','likes'=>Product::query()->find($id)->likes,'status'=>false]);
+                }
+            } else
+                return response()->json(['message'=>'product not found']);
+        }
+        else
+            return response()->json(['message'=>'access denied']);
+    }
 
     public function show_managers($id)
     {

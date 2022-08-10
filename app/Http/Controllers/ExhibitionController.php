@@ -2,14 +2,55 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{ Exhibition, Favorite, Pavilion, ProductLike, Table};
+use App\Models\{Company, Exhibition, Favorite, Pavilion, Product, ProductLike, Table};
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 class ExhibitionController extends Controller
 {
 
+    public function search(Request $request,$name)
+    {
+        if ($name=='exhibition')
+        {
+            $data1=[];
+            $data=Exhibition::without('admin')->get();
+            foreach ($data as $item) {
+                if (str_contains($item->name,$request->name))
+                {
+                    $data1[]=$item;
+                }
+            }
+            return response()->json(['message'=>$data1]);
+        }
+
+        elseif($name=='company')
+        {
+            $data1=[];
+            $data=Company::all();
+            foreach ($data as $item) {
+                   if (str_contains($item->company_name,$request->name)){
+                       $data1[]=$item;
+                   }
+
+            }
+            return response()->json(['message'=>$data1]);
+        }
+        elseif($name=='product')
+        {
+            $data1=[];
+            $data=Product::without('table','company')->get();
+            foreach ($data as $item) {
+                if (str_contains($item->name,$request->name)){
+                    $data1[]=$item;
+                }
+
+            }
+            return response()->json(['message'=>$data1]);
+        }
+
+            return response()->json(['message'=>'error']);
+    }
     //---------------------------------show exhibitions--------------------------------------------------------------------------------------------------
 
       public function show_exh(Request $request)
@@ -101,7 +142,7 @@ class ExhibitionController extends Controller
           $data=Exhibition::query();
           if ($data->where(['admin_id'=>auth()->id()])->exists()){
               $data=$data->without('admin')->where(['admin_id'=>auth()->id()])->get();
-              return response()->json(['my exhibitions'=>$data]);
+              return response()->json(['message'=>$data]);
           }
           else
               return response()->json(['message'=>[]]);
@@ -177,7 +218,7 @@ class ExhibitionController extends Controller
             return response()->json(['message' => 'exhibition not found']);
 
     }
-    public function visitor_show_user_pav($id)
+    public function visitor_pav($id)
     {
         if ( Exhibition::query()->where('id',$id)->exists()) {
             $data = Exhibition::query()->find($id);
@@ -213,13 +254,9 @@ class ExhibitionController extends Controller
               'preparation_duration'=>['required','date','before:exhibition_start'],
               'district'=>['required','string'],
               'city'=>['required','string'],
-              'photo'=>['required','image'],
           ]);
-          if($a){
-              $file = $request->file('photo');
-              $filename =Str::random(40).$file->getClientOriginalName();
-              $file->move(public_path('public/Image'),$filename);
-              $photo = $filename;
+
+          if(Carbon::parse($request->exhibition_end) > now()){
 
               $data=Exhibition::query()->create([
                   'admin_id'=>auth()->id(),
@@ -229,8 +266,6 @@ class ExhibitionController extends Controller
                   'preparation_duration'=>$request->preparation_duration,
                   'district'=>$request->district,
                   'city'=>$request->city,
-                  'photo'=>$photo,
-                  'status'=>'pre'
 
               ]);
 

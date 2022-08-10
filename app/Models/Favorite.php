@@ -14,6 +14,7 @@ class Favorite extends Model
     protected $fillable = [
         'exhibition_id',
         'table_id',
+        'product_id',
         'user_id',
         'company_id',
     ];

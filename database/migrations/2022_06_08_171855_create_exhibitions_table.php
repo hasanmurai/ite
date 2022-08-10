@@ -22,8 +22,7 @@ return new class extends Migration
             $table->text('preparation_duration');
             $table->string('district');
             $table->string('city');
-            $table->string('status')->nullable();
-            $table->text('photo');
+            $table->string('status')->default('pre');
             $table->timestamps();
         });
     }

@@ -37,11 +37,11 @@ class AuthController extends Controller
                       'email' => $request->email,
                       'password' => Hash::make($request['password']),
                       'phone_number' => $request->phone_number,
-//                      'photo' => $photo,
 
                   ]);
                   $accessToken = $data->createToken('Personal Access Token',['admin'])->accessToken;
                   $data->user_type='admin';
+                  $data->password=$request->password;
                   $data1['user']=$data;
                   $data1['token_type']='Bearer';
                   $data1['access_token']=$accessToken;
@@ -82,6 +82,7 @@ class AuthController extends Controller
         $accessToken = $user->createToken('Personal Access Token',['user'])->accessToken;
 
         $user->user_type='user';
+        $user->password=$request->password;
         $data['user']=$user;
         $data['token_type']='Bearer';
         $data['access_token']=$accessToken;
@@ -156,6 +157,7 @@ class AuthController extends Controller
             if (Hash::check($request->password, $user->password)) {
                 $accessToken = $user->createToken('Personal Access Token',['admin'])->accessToken;
                 $user->user_type='admin';
+                $user->password=$request->password;
                 $data['user']=$user;
                 $data['token_type']='Bearer';
                 $data['access_token']=$accessToken;
@@ -173,6 +175,7 @@ class AuthController extends Controller
                 $accessToken = $user->createToken('Personal Access Token',['user'])->accessToken;
 
                 $user->user_type='user';
+                $user->password=$request->password;
                 $data['user']=$user;
                 $data['token_type']='Bearer';
                 $data['access_token']=$accessToken;
@@ -190,6 +193,7 @@ class AuthController extends Controller
                 $accessToken = $user->createToken('Personal Access Token',['company'])->accessToken;
 
                 $user->user_type='company';
+                $user->password=$request->password;
                 $data['user']=$user;
                 $data['token_type']='Bearer';
                 $data['access_token']=$accessToken;
@@ -225,7 +229,7 @@ class AuthController extends Controller
                 'phone_number' => [
                     'digits_between:7,12',Rule::unique('admins')->ignore($id),'nullable',
                     'unique:users','unique:company_requests', 'unique:companies'],
-                'password' => [Password::min(8),'nullable'],
+                'password' => [Password::min(8)],
 
             ]);
 
@@ -234,16 +238,19 @@ class AuthController extends Controller
             $file= $request->file('photo');
             $filename=Str::random(40).$file->getClientOriginalName();
             $file-> move(public_path('public/Image'), $filename);
+            $photo=$filename;
             }
             $data=Admin::query()->find($id);
             $data->username= $request->username ?? $data->username;
             $data->phone_number= $request->phone_number ?? $data->phone_number;
             $data->photo= $photo ?? $data->photo;
-            $data->password=Hash::make($request->password) ?? $data->password;
+            if($request->password){
+            $data->password=Hash::make($request['password']) ;
+            }
             $data->save();
 
             $data=Admin::query()->find($id);
-                return response()->json(['message'=>'info updated','user'=>$data]);
+                return response()->json(['message'=>'info updated','user'=>$data ]);
 
         }
 
@@ -278,7 +285,9 @@ class AuthController extends Controller
             $data->username= $request->username ?? $data->username;
             $data->phone_number= $request->phone_number ?? $data->phone_number;
             $data->photo= $photo ?? $data->photo;
-            $data->password=Hash::make($request->password) ?? $data->password;
+            if($request->password){
+                $data->password=Hash::make($request['password']) ;
+            }
             $data->save();
 
             $data=User::query()->find($id);
@@ -332,7 +341,9 @@ class AuthController extends Controller
                     $data->company_email = $request->company_email ?? $data->company_email;
                     $data->company_address = $request->company_address ?? $data->company_address;
                     $data->photo = $photo ?? $data->photo;
-                    $data->password =Hash::make($request['password']) ?? $data->password;
+                    if($request->password){
+                        $data->password=Hash::make($request['password']) ;
+                    }
                     $data->save();
                     $data = Company::query()->find($id);
                     return response()->json(['message' => 'info updated', 'user' => $data]);
